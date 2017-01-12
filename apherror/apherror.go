@@ -31,9 +31,11 @@ var (
 	ErrNotAcceptable = newErrorClass("Accept header is not acceptable", http.StatusNotAcceptable)
 	//ErrUnsupportedMedia represents any error with unsupported media type in http header
 	ErrUnsupportedMedia = newErrorClass("Media type is not supported", http.StatusUnsupportedMediaType)
-	titleErrKey         = errors.GenSym()
-	pointerErrKey       = errors.GenSym()
-	paramErrKey         = errors.GenSym()
+	//ErrQueryParam represents any error with http query parameters
+	ErrQueryParam = newErrorClass("Invalid query parameter", http.StatusBadRequest)
+	titleErrKey   = errors.GenSym()
+	pointerErrKey = errors.GenSym()
+	paramErrKey   = errors.GenSym()
 )
 
 func newErrorClassWithParam(msg, param string, code int) *errors.ErrorClass {
@@ -59,13 +61,14 @@ func newErrorClass(msg string, code int) *errors.ErrorClass {
 
 //JSONAPIError generate JSONAPI formatted http error from an error object
 func JSONAPIError(w http.ResponseWriter, err error) {
+	status := errhttp.GetStatusCode(err, http.StatusInternalServerError)
 	title, _ := errors.GetData(err, titleErrKey).(string)
 	jsnErr := api2go.Error{
-		Status: strconv.Itoa(errhttp.GetStatusCode(err, http.StatusInternalServerError)),
+		Status: strconv.Itoa(status),
 		Title:  title,
 		Detail: errhttp.GetErrorBody(err),
 		Meta: map[string]interface{}{
-			"creator": "modware api",
+			"creator": "api error helper",
 		},
 	}
 	pointer, ok := errors.GetData(err, pointerErrKey).(string)
@@ -76,6 +79,8 @@ func JSONAPIError(w http.ResponseWriter, err error) {
 	if ok {
 		jsnErr.Source.Parameter = param
 	}
+	w.Header().Set("Content-Type", "application/vnd.api+json")
+	w.WriteHeader(status)
 	encErr := json.NewEncoder(w).Encode(api2go.HTTPError{Errors: []api2go.Error{jsnErr}})
 	if encErr != nil {
 		http.Error(w, encErr.Error(), http.StatusInternalServerError)
