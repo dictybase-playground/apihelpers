@@ -27,9 +27,13 @@ var (
 	ErrStructMarshal = newErrorClass("Structure marshalling error", http.StatusInternalServerError)
 	//ErrIncludeParam represents any error with invalid include query parameter
 	ErrIncludeParam = newErrorClassWithParam("Invalid include query parameter", "include", http.StatusBadRequest)
-	titleErrKey     = errors.GenSym()
-	pointerErrKey   = errors.GenSym()
-	paramErrKey     = errors.GenSym()
+	//ErrNotAcceptable represents any error with wrong or inappropriate http Accept header
+	ErrNotAcceptable = newErrorClass("Accept header is not acceptable", http.StatusNotAcceptable)
+	//ErrUnsupportedMedia represents any error with unsupported media type in http header
+	ErrUnsupportedMedia = newErrorClass("Media type is not supported", http.StatusUnsupportedMediaType)
+	titleErrKey         = errors.GenSym()
+	pointerErrKey       = errors.GenSym()
+	paramErrKey         = errors.GenSym()
 )
 
 func newErrorClassWithParam(msg, param string, code int) *errors.ErrorClass {
