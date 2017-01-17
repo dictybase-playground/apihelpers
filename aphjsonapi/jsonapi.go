@@ -170,3 +170,20 @@ func generateRelationshipLinks(data interface{}, jdata *jsonapi.Data, ep jsonapi
 	}
 	return relationships
 }
+
+// MapFieldsToDbRow maps JSONAPI attributes to database row names
+func MapFieldsToDbRow(data interface{}) map[string]string {
+	frow := make(map[string]string)
+	t := reflect.TypeOf(data)
+	for i := 0; i < t.NumField(); i++ {
+		tag := t.Field(i).Tag
+		v, ok := tag.Lookup("json")
+		if ok && v != "-" {
+			r, dbok := tag.Lookup("db")
+			if dbok && r != "-" {
+				frow[v] = r
+			}
+		}
+	}
+	return frow
+}
