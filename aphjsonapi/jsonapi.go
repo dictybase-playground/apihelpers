@@ -1,6 +1,5 @@
-// Package aphjsonapi provides additional interfaces and wrapper functions for original
-// jsonapi package("github.com/manyminds/api2go/jsonapi") to create and customize
-// the self and related relationship links
+// Package aphjsonapi provides additional interfaces, wrapper and helper functions for original
+// jsonapi package("github.com/manyminds/api2go/jsonapi")
 package aphjsonapi
 
 import (
@@ -31,6 +30,7 @@ type MarshalRelatedRelations interface {
 	GetRelatedLinksInfo() []RelationShipLink
 }
 
+// MarshalWithPagination adds pagination information for collection resource
 func MarshalWithPagination(data interface{}, ep jsonapi.ServerInformation, opt *pagination.Props) (*jsonapi.Document, error) {
 	var jst *jsonapi.Document
 	if reflect.TypeOf(data).Kind() != reflect.Slice {
@@ -64,6 +64,8 @@ func MarshalWithPagination(data interface{}, ep jsonapi.ServerInformation, opt *
 	return jst, nil
 }
 
+// MarshalToStructWrapper adds relationship information and returns a
+// jsonapi.Document structure for further json encoding
 func MarshalToStructWrapper(data interface{}, ep jsonapi.ServerInformation) (*jsonapi.Document, error) {
 	jst, err := jsonapi.MarshalToStruct(data, ep)
 	if err != nil {
@@ -167,4 +169,38 @@ func generateRelationshipLinks(data interface{}, jdata *jsonapi.Data, ep jsonapi
 		}
 	}
 	return relationships
+}
+
+//GetRelatedTypeNames returns the JSONAPI types of the related resources
+func GetRelatedTypeNames(data interface{}) []string {
+	var names []string
+	mtype := reflect.TypeOf((*jsonapi.MarshalIdentifier)(nil)).Elem()
+	t := reflect.Indirect(reflect.ValueOf(data)).Type()
+	for i := 0; i < t.NumField(); i++ {
+		ftype := t.Field(i).Type
+		if ftype.Kind() == reflect.Slice {
+			if ftype.Elem().Implements(mtype) {
+				names = append(
+					names,
+					jsonapi.Pluralize(
+						jsonapi.Jsonify(
+							ftype.Elem().Name(),
+						),
+					),
+				)
+				continue
+			}
+		}
+		if ftype.Implements(mtype) {
+			names = append(
+				names,
+				jsonapi.Pluralize(
+					jsonapi.Jsonify(
+						ftype.Name(),
+					),
+				),
+			)
+		}
+	}
+	return names
 }
