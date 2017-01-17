@@ -27,13 +27,13 @@ func (server *TestApiInfo) GetBaseURL() string {
 }
 
 //GetPrefix returns generic prefix for each api path
-func (server *TestApinfo) GetPrefix() string {
+func (server *TestApiInfo) GetPrefix() string {
 	return server.Prefix
 }
 
 //NewTestApiInfo is a constructor for TestApiInfo
 func NewTestApiInfo() *TestApiInfo {
-	return &TestApiInfo{apiHost, pathPrefix}
+	return &TestApiInfo{APIHost, PathPrefix}
 }
 
 // IndentJSON uniformly indent the json byte
