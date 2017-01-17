@@ -38,6 +38,54 @@ func HasRelationships(data interface{}, rels []string) error {
 	return nil
 }
 
+func ResourceType(name string, data interface{}) bool {
+	if name == getTypeName(data) {
+		return true
+	}
+	return false
+}
+
+func RelatedResourceType(name string, data interface{}) bool {
+	if aphcollection.Contains(GetRelatedTypeNames(data), name) {
+		return true
+	}
+	return false
+}
+
+//GetRelatedTypeNames returns the JSONAPI types of the related resources
+func GetRelatedTypeNames(data interface{}) []string {
+	var names []string
+	mtype := reflect.TypeOf((*jsonapi.MarshalIdentifier)(nil)).Elem()
+	t := reflect.Indirect(reflect.ValueOf(data)).Type()
+	for i := 0; i < t.NumField(); i++ {
+		ftype := t.Field(i).Type
+		if ftype.Kind() == reflect.Slice {
+			if ftype.Elem().Implements(mtype) {
+				names = append(
+					names,
+					jsonapi.Pluralize(
+						jsonapi.Jsonify(
+							ftype.Elem().Name(),
+						),
+					),
+				)
+				continue
+			}
+		}
+		if ftype.Implements(mtype) {
+			names = append(
+				names,
+				jsonapi.Pluralize(
+					jsonapi.Jsonify(
+						ftype.Name(),
+					),
+				),
+			)
+		}
+	}
+	return names
+}
+
 func getTypeName(data interface{}) string {
 	entity, ok := data.(jsonapi.EntityNamer)
 	if ok {
