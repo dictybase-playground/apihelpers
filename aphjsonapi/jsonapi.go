@@ -12,7 +12,8 @@ import (
 	"github.com/manyminds/api2go/jsonapi"
 )
 
-// Container type for having information about relationship links
+// RelationshipLink is a container type for having information about
+// relationship links
 type RelationShipLink struct {
 	Name string
 	// To override the default links, it will be appended to
@@ -20,14 +21,21 @@ type RelationShipLink struct {
 	SuffixFragment string
 }
 
-// Interface to implement for creating self relationship links
+// MarshalSelfRelations is an interface  for creating self relationship links
 type MarshalSelfRelations interface {
 	GetSelfLinksInfo() []RelationShipLink
 }
 
-// Interface to implement for creating related relationship links
+// MarshalRelatedRelations is an interface  for creating related relationship
+// links
 type MarshalRelatedRelations interface {
 	GetRelatedLinksInfo() []RelationShipLink
+}
+
+// AttributeToDbRowMapper is an interface to provide mapping between JSONAPI
+// attribute and database row names
+type AttributeToDbRowMapper interface {
+	GetMap() map[string]string
 }
 
 // MarshalWithPagination adds pagination information for collection resource
@@ -173,6 +181,10 @@ func generateRelationshipLinks(data interface{}, jdata *jsonapi.Data, ep jsonapi
 
 // MapFieldsToDbRow maps JSONAPI attributes to database row names
 func MapFieldsToDbRow(data interface{}) map[string]string {
+	m, ok := data.(AttributeToDbRowMapper)
+	if ok {
+		return m.GetMap()
+	}
 	frow := make(map[string]string)
 	t := reflect.TypeOf(data)
 	for i := 0; i < t.NumField(); i++ {
