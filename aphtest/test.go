@@ -16,6 +16,26 @@ const (
 	PubID = "99"
 )
 
+type TestApiInfo struct {
+	BaseURL string
+	Prefix  string
+}
+
+//GetBaseURL returns the base path of the api
+func (server *TestApiInfo) GetBaseURL() string {
+	return server.BaseURL
+}
+
+//GetPrefix returns generic prefix for each api path
+func (server *TestApinfo) GetPrefix() string {
+	return server.Prefix
+}
+
+//NewTestApiInfo is a constructor for TestApiInfo
+func NewTestApiInfo() *TestApiInfo {
+	return &TestApiInfo{apiHost, pathPrefix}
+}
+
 // IndentJSON uniformly indent the json byte
 func IndentJSON(b []byte) []byte {
 	var out bytes.Buffer
@@ -23,7 +43,7 @@ func IndentJSON(b []byte) []byte {
 	return bytes.TrimSpace(out.Bytes())
 }
 
-// APIServer returns a server URL
+// APIServer returns a new test API endpoint
 func APIServer() string {
 	return fmt.Sprintf("%s/%s", APIHost, PathPrefix)
 }
