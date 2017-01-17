@@ -38,6 +38,7 @@ func HasRelationships(data interface{}, rels []string) error {
 	return nil
 }
 
+// ResourceType matches name with JSONAPI type in data's fields
 func ResourceType(name string, data interface{}) bool {
 	if name == getTypeName(data) {
 		return true
@@ -45,6 +46,7 @@ func ResourceType(name string, data interface{}) bool {
 	return false
 }
 
+// RelatedResourceType matches name with all related JSONAPI type in data's fields
 func RelatedResourceType(name string, data interface{}) bool {
 	if aphcollection.Contains(GetRelatedTypeNames(data), name) {
 		return true
@@ -52,11 +54,24 @@ func RelatedResourceType(name string, data interface{}) bool {
 	return false
 }
 
+// FieldNames matches all elements of s with all JSONAPI field names
+// in data's fields
+func FieldNames(s []string, data interface{}) bool {
+	t := reflect.TypeOf(data)
+	for i := 0; i < t.NumField(); i++ {
+		v, ok := t.Field(i).Tag.Lookup("json")
+		if ok && v != "-" && !aphcollection.Contains(s, v) {
+			return false
+		}
+	}
+	return true
+}
+
 //GetRelatedTypeNames returns the JSONAPI types of the related resources
 func GetRelatedTypeNames(data interface{}) []string {
 	var names []string
 	mtype := reflect.TypeOf((*jsonapi.MarshalIdentifier)(nil)).Elem()
-	t := reflect.Indirect(reflect.ValueOf(data)).Type()
+	t := reflect.TypeOf(data)
 	for i := 0; i < t.NumField(); i++ {
 		ftype := t.Field(i).Type
 		if ftype.Kind() == reflect.Slice {

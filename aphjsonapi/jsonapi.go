@@ -170,37 +170,3 @@ func generateRelationshipLinks(data interface{}, jdata *jsonapi.Data, ep jsonapi
 	}
 	return relationships
 }
-
-//GetRelatedTypeNames returns the JSONAPI types of the related resources
-func GetRelatedTypeNames(data interface{}) []string {
-	var names []string
-	mtype := reflect.TypeOf((*jsonapi.MarshalIdentifier)(nil)).Elem()
-	t := reflect.Indirect(reflect.ValueOf(data)).Type()
-	for i := 0; i < t.NumField(); i++ {
-		ftype := t.Field(i).Type
-		if ftype.Kind() == reflect.Slice {
-			if ftype.Elem().Implements(mtype) {
-				names = append(
-					names,
-					jsonapi.Pluralize(
-						jsonapi.Jsonify(
-							ftype.Elem().Name(),
-						),
-					),
-				)
-				continue
-			}
-		}
-		if ftype.Implements(mtype) {
-			names = append(
-				names,
-				jsonapi.Pluralize(
-					jsonapi.Jsonify(
-						ftype.Name(),
-					),
-				),
-			)
-		}
-	}
-	return names
-}
