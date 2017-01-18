@@ -3,37 +3,55 @@ package validate
 import (
 	"fmt"
 	"reflect"
-	"strings"
 
 	"github.com/dictyBase/apihelpers/aphcollection"
 	jsapi "github.com/dictyBase/apihelpers/aphjsonapi"
 	"github.com/manyminds/api2go/jsonapi"
 )
 
-//HasRelationships matches if the relationships rels are implemented in the
-//given JSONAPI implementing data
-func HasRelationships(data interface{}, rels []string) error {
-	matchedRel := true
-	matchedSelf := true
+func mapRelsToName(js []jsapi.RelationShipLink, fn func(jsapi.RelationShipLink) string) []string {
+	s := make([]string, len(js))
+	for i, v := range js {
+		s[i] = fn(v)
+	}
+	return s
+}
+
+// GetAllRelationships returns all relationships of data interface
+func GetAllRelationships(data interface{}) ([]jsapi.RelationShipLink, error) {
+	var r []jsapi.RelationShipLink
 	self, ok := data.(jsapi.MarshalSelfRelations)
 	if ok {
-		for _, rel := range self.GetSelfLinksInfo() {
-			if aphcollection.Contains(rels, rel.Name) {
-				matchedSelf = true
-				break
-			}
+		if err := self.ValidateSelfLinks(); err != nil {
+			return r, err
 		}
+		r = append(r, self.GetSelfLinksInfo()...)
 	}
 	related, ok := data.(jsapi.MarshalRelatedRelations)
 	if ok {
-		for _, rel := range related.GetRelatedLinksInfo() {
-			if !aphcollection.Contains(rels, rel.Name) {
-				matchedRel = true
-			}
+		if err := related.ValidateRelatedLinks(); err != nil {
+			return r, err
 		}
+		r = append(r, related.GetRelatedLinksInfo()...)
 	}
-	if !matchedRel && !matchedSelf {
-		return fmt.Errorf("given names %s does not matches to any relationship", strings.Join(rels, ","))
+	if len(r) == 0 {
+		return r, fmt.Errorf("no relationship defined")
+	}
+	return r, nil
+}
+
+//HasRelationships checks if slice a contains any relationship name in rs slice
+func HasRelationships(a []string, rs []jsapi.RelationShipLink) error {
+	allNames := mapRelsToName(rs, func(r jsapi.RelationShipLink) string {
+		return r.Name
+	})
+	for _, s := range a {
+		if !aphcollection.Contains(allNames, s) {
+			return fmt.Errorf(
+				"given name %s does not matches to any defined relationships",
+				s,
+			)
+		}
 	}
 	return nil
 }
@@ -46,12 +64,15 @@ func ResourceType(name string, data interface{}) bool {
 	return false
 }
 
-// RelatedResourceType matches name with all related JSONAPI type in data's fields
-func RelatedResourceType(name string, data interface{}) bool {
-	if aphcollection.Contains(GetRelatedTypeNames(data), name) {
-		return true
+// RelationshipResourceType checks if the given resource name matches any type
+// in the rs slice
+func RelationshipResourceType(name string, rs []jsapi.RelationShipLink) error {
+	for _, r := range rs {
+		if name == r.Type {
+			return nil
+		}
 	}
-	return false
+	return fmt.Errorf("%s resource type does not matches any relationship type", name)
 }
 
 // FieldNames matches all elements of s with all JSONAPI field names
