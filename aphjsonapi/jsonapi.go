@@ -207,3 +207,45 @@ func MapFieldsToDbRow(data interface{}) map[string]string {
 	}
 	return frow
 }
+
+// GetTypeName gets the type name(type field) from a JSONAPI implementing
+// interface. It is recommended to implement jsonapi.EntityNamer interface to
+// reduce the use of reflection
+func GetTypeName(data interface{}) string {
+	entity, ok := data.(jsonapi.EntityNamer)
+	if ok {
+		return entity.GetName()
+	}
+	rType := reflect.TypeOf(data)
+	if rType.Kind() == reflect.Ptr {
+		return jsonapi.Pluralize(jsonapi.Jsonify(rType.Elem().Name()))
+	}
+	return jsonapi.Pluralize(jsonapi.Jsonify(rType.Name()))
+}
+
+// AttributeNames returns all JSAONAPI attribute names of data interface
+func AttributeNames(data interface{}) []string {
+	var attr []string
+	t := reflect.TypeOf(data)
+	for i := 0; i < t.NumField(); i++ {
+		v, ok := t.Field(i).Tag.Lookup("json")
+		if ok && v != "-" {
+			attr = append(attr, v)
+		}
+	}
+	return attr
+}
+
+// GetAllRelationships returns all relationships of data interface
+func GetAllRelationships(data interface{}) []jsapi.RelationShipLink {
+	var r []jsapi.RelationShipLink
+	self, ok := data.(jsapi.MarshalSelfRelations)
+	if ok {
+		r = append(r, self.GetSelfLinksInfo()...)
+	}
+	related, ok := data.(jsapi.MarshalRelatedRelations)
+	if ok {
+		r = append(r, related.GetRelatedLinksInfo()...)
+	}
+	return r
+}
