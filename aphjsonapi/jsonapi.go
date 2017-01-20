@@ -1,5 +1,5 @@
-// Package aphjsonapi provides additional interfaces, wrapper and helper functions for original
-// jsonapi package("github.com/manyminds/api2go/jsonapi")
+// Package aphjsapi provides additional interfaces, wrapper and helper functions for original
+// jsapi package("github.com/manyminds/api2go/jsapi")
 package aphjsonapi
 
 import (
@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/dictyBase/go-middlewares/middlewares/pagination"
-	"github.com/manyminds/api2go/jsonapi"
+	jsapi "github.com/manyminds/api2go/jsonapi"
 )
 
 // RelationshipLink is a container type for having information about
@@ -40,15 +40,23 @@ type MarshalRelatedRelations interface {
 	GetRelatedLinksInfo() []RelationShipLink
 }
 
-// AttributeToDbRowMapper is an interface to provide mapping between JSONAPI
-// attribute and database row names
+// AttributeToDbRowMapper is an interface to provide mapping between jsapi
+// attribute and database row names. This is useful for implementing filter
+// query parameter
 type AttributeToDbRowMapper interface {
 	GetMap() map[string]string
 }
 
+// RelationshipAttributes is an interface to provide attribute fields of
+// relationship resources. This is mandatory for supporting sparse fieldset
+// query parameter.
+type RelationshipAttribute interface {
+	GetAttributeFields(string) []string
+}
+
 // MarshalWithPagination adds pagination information for collection resource
-func MarshalWithPagination(data interface{}, ep jsonapi.ServerInformation, opt *pagination.Props) (*jsonapi.Document, error) {
-	var jst *jsonapi.Document
+func MarshalWithPagination(data interface{}, ep jsapi.ServerInformation, opt *pagination.Props) (*jsapi.Document, error) {
+	var jst *jsapi.Document
 	if reflect.TypeOf(data).Kind() != reflect.Slice {
 		return jst, fmt.Errorf("%s\n", "Only slice type is allowed for pagination")
 	}
@@ -57,7 +65,7 @@ func MarshalWithPagination(data interface{}, ep jsonapi.ServerInformation, opt *
 		return jst, err
 	}
 	baseLink := jst.Links.Self
-	pageLink := &jsonapi.Links{}
+	pageLink := &jsapi.Links{}
 	pageLink.Self = generatePaginatedResourceLink(baseLink, opt.Current, opt.Entries)
 	pageLink.First = generatePaginatedResourceLink(baseLink, 1, opt.Entries)
 	if opt.Current != 1 {
@@ -81,9 +89,9 @@ func MarshalWithPagination(data interface{}, ep jsonapi.ServerInformation, opt *
 }
 
 // MarshalToStructWrapper adds relationship information and returns a
-// jsonapi.Document structure for further json encoding
-func MarshalToStructWrapper(data interface{}, ep jsonapi.ServerInformation) (*jsonapi.Document, error) {
-	jst, err := jsonapi.MarshalToStruct(data, ep)
+// jsapi.Document structure for further json encoding
+func MarshalToStructWrapper(data interface{}, ep jsapi.ServerInformation) (*jsapi.Document, error) {
+	jst, err := jsapi.MarshalToStruct(data, ep)
 	if err != nil {
 		return jst, err
 	}
@@ -92,16 +100,16 @@ func MarshalToStructWrapper(data interface{}, ep jsonapi.ServerInformation) (*js
 		elem := jst.Data.DataArray[0]
 		value := reflect.ValueOf(data).Index(0).Interface()
 		// link for the array resource itself
-		jst.Links = &jsonapi.Links{Self: generateMultiResourceLink(&elem, ep)}
+		jst.Links = &jsapi.Links{Self: generateMultiResourceLink(&elem, ep)}
 		for i, d := range jst.Data.DataArray {
 			// link for individual resource
-			jst.Data.DataArray[i].Links = &jsonapi.Links{Self: generateSingleResourceLink(&d, ep)}
+			jst.Data.DataArray[i].Links = &jsapi.Links{Self: generateSingleResourceLink(&d, ep)}
 			// Add relationships to every member
 			r := generateRelationshipLinks(value, &d, ep)
 			jst.Data.DataArray[i].Relationships = r
 		}
 	} else {
-		jst.Links = &jsonapi.Links{Self: generateSingleResourceLink(jst.Data.DataObject, ep)}
+		jst.Links = &jsapi.Links{Self: generateSingleResourceLink(jst.Data.DataObject, ep)}
 		relationships := generateRelationshipLinks(data, jst.Data.DataObject, ep)
 		if len(relationships) > 0 {
 			jst.Data.DataObject.Relationships = relationships
@@ -110,7 +118,7 @@ func MarshalToStructWrapper(data interface{}, ep jsonapi.ServerInformation) (*js
 	return jst, nil
 }
 
-func generateBaseLink(ep jsonapi.ServerInformation) string {
+func generateBaseLink(ep jsapi.ServerInformation) string {
 	return fmt.Sprintf(
 		"%s/%s",
 		strings.Trim(ep.GetBaseURL(), "/"),
@@ -127,7 +135,7 @@ func generatePaginatedResourceLink(baseurl string, pagenum, pagesize int) string
 	)
 }
 
-func generateSingleResourceLink(jdata *jsonapi.Data, ep jsonapi.ServerInformation) string {
+func generateSingleResourceLink(jdata *jsapi.Data, ep jsapi.ServerInformation) string {
 	return fmt.Sprintf(
 		"%s/%s/%s",
 		generateBaseLink(ep),
@@ -136,7 +144,7 @@ func generateSingleResourceLink(jdata *jsonapi.Data, ep jsonapi.ServerInformatio
 	)
 }
 
-func generateMultiResourceLink(jdata *jsonapi.Data, ep jsonapi.ServerInformation) string {
+func generateMultiResourceLink(jdata *jsapi.Data, ep jsapi.ServerInformation) string {
 	return fmt.Sprintf(
 		"%s/%s",
 		generateBaseLink(ep),
@@ -144,13 +152,13 @@ func generateMultiResourceLink(jdata *jsonapi.Data, ep jsonapi.ServerInformation
 	)
 }
 
-func generateRelationshipLinks(data interface{}, jdata *jsonapi.Data, ep jsonapi.ServerInformation) map[string]jsonapi.Relationship {
-	relationships := make(map[string]jsonapi.Relationship)
+func generateRelationshipLinks(data interface{}, jdata *jsapi.Data, ep jsapi.ServerInformation) map[string]jsapi.Relationship {
+	relationships := make(map[string]jsapi.Relationship)
 	baselink := generateBaseLink(ep)
 	self, ok := data.(MarshalSelfRelations)
 	if ok {
 		for _, rel := range self.GetSelfLinksInfo() {
-			links := &jsonapi.Links{}
+			links := &jsapi.Links{}
 			if len(rel.SuffixFragment) > 0 {
 				links.Self = fmt.Sprintf("%s/%s", baselink, strings.Trim(rel.SuffixFragment, "/"))
 			} else {
@@ -161,7 +169,7 @@ func generateRelationshipLinks(data interface{}, jdata *jsonapi.Data, ep jsonapi
 					rel.Name,
 				)
 			}
-			relationships[rel.Name] = jsonapi.Relationship{Links: links}
+			relationships[rel.Name] = jsapi.Relationship{Links: links}
 		}
 	}
 	related, ok := data.(MarshalRelatedRelations)
@@ -180,14 +188,14 @@ func generateRelationshipLinks(data interface{}, jdata *jsonapi.Data, ep jsonapi
 			if _, ok := relationships[rel.Name]; ok {
 				relationships[rel.Name].Links.Related = rlink
 			} else {
-				relationships[rel.Name] = jsonapi.Relationship{Links: &jsonapi.Links{Related: rlink}}
+				relationships[rel.Name] = jsapi.Relationship{Links: &jsapi.Links{Related: rlink}}
 			}
 		}
 	}
 	return relationships
 }
 
-// MapFieldsToDbRow maps JSONAPI attributes to database row names
+// MapFieldsToDbRow maps jsapi attributes to database row names
 func MapFieldsToDbRow(data interface{}) map[string]string {
 	m, ok := data.(AttributeToDbRowMapper)
 	if ok {
@@ -208,23 +216,23 @@ func MapFieldsToDbRow(data interface{}) map[string]string {
 	return frow
 }
 
-// GetTypeName gets the type name(type field) from a JSONAPI implementing
-// interface. It is recommended to implement jsonapi.EntityNamer interface to
+// GetTypeName gets the type name(type field) from a jsapi implementing
+// interface. It is recommended to implement jsapi.EntityNamer interface to
 // reduce the use of reflection
 func GetTypeName(data interface{}) string {
-	entity, ok := data.(jsonapi.EntityNamer)
+	entity, ok := data.(jsapi.EntityNamer)
 	if ok {
 		return entity.GetName()
 	}
 	rType := reflect.TypeOf(data)
 	if rType.Kind() == reflect.Ptr {
-		return jsonapi.Pluralize(jsonapi.Jsonify(rType.Elem().Name()))
+		return jsapi.Pluralize(jsapi.Jsonify(rType.Elem().Name()))
 	}
-	return jsonapi.Pluralize(jsonapi.Jsonify(rType.Name()))
+	return jsapi.Pluralize(jsapi.Jsonify(rType.Name()))
 }
 
 // AttributeNames returns all JSAONAPI attribute names of data interface
-func AttributeNames(data interface{}) []string {
+func GetAttributeFields(data interface{}) []string {
 	var attr []string
 	t := reflect.TypeOf(data)
 	for i := 0; i < t.NumField(); i++ {
@@ -237,15 +245,50 @@ func AttributeNames(data interface{}) []string {
 }
 
 // GetAllRelationships returns all relationships of data interface
-func GetAllRelationships(data interface{}) []jsapi.RelationShipLink {
-	var r []jsapi.RelationShipLink
-	self, ok := data.(jsapi.MarshalSelfRelations)
+func GetAllRelationships(data interface{}) []RelationShipLink {
+	var r []RelationShipLink
+	self, ok := data.(MarshalSelfRelations)
 	if ok {
 		r = append(r, self.GetSelfLinksInfo()...)
 	}
-	related, ok := data.(jsapi.MarshalRelatedRelations)
+	related, ok := data.(MarshalRelatedRelations)
 	if ok {
 		r = append(r, related.GetRelatedLinksInfo()...)
 	}
 	return r
+}
+
+//GetRelatedTypes returns a map jsapi types of the related resources using
+//reflection
+func getRelatedTypeNames(data interface{}) []string {
+	var names []string
+	mtype := reflect.TypeOf((*jsapi.MarshalIdentifier)(nil)).Elem()
+	t := reflect.TypeOf(data)
+	for i := 0; i < t.NumField(); i++ {
+		ftype := t.Field(i).Type
+		if ftype.Kind() == reflect.Slice {
+			if ftype.Elem().Implements(mtype) {
+				names = append(
+					names,
+					jsapi.Pluralize(
+						jsapi.Jsonify(
+							ftype.Elem().Name(),
+						),
+					),
+				)
+				continue
+			}
+		}
+		if ftype.Implements(mtype) {
+			names = append(
+				names,
+				jsapi.Pluralize(
+					jsapi.Jsonify(
+						ftype.Name(),
+					),
+				),
+			)
+		}
+	}
+	return names
 }
