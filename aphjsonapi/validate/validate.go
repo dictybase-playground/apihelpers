@@ -4,10 +4,14 @@ import (
 	"fmt"
 	"reflect"
 
+	"gopkg.in/go-playground/validator.v9"
+
 	"github.com/dictyBase/apihelpers/aphcollection"
 	jsapi "github.com/dictyBase/apihelpers/aphjsonapi"
 	"github.com/manyminds/api2go/jsonapi"
 )
+
+var validate = validator.New()
 
 func mapRelsToName(js []jsapi.RelationShipLink, fn func(jsapi.RelationShipLink) string) []string {
 	s := make([]string, len(js))
@@ -34,9 +38,12 @@ func HasRelationships(a []string, rs []jsapi.RelationShipLink) error {
 }
 
 // RelationshipResourceType checks if the given resource name matches any type
-// in the rs slice
+// in the relationship rs slice and returns the type name
 func RelationshipResourceType(name string, rs []jsapi.RelationShipLink) error {
 	for _, r := range rs {
+		if err := validate.Struct(r); err != nil {
+			return err
+		}
 		if name == r.Type {
 			return nil
 		}
