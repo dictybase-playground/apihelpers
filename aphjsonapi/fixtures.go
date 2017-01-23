@@ -31,6 +31,10 @@ func (r *Role) GetSelfLinksInfo() []RelationShipLink {
 	}
 }
 
+func (r *Role) ValidateSelfLinks() error {
+	return nil
+}
+
 func (r *Role) GetRelatedLinksInfo() []RelationShipLink {
 	return []RelationShipLink{
 		RelationShipLink{
@@ -39,6 +43,10 @@ func (r *Role) GetRelatedLinksInfo() []RelationShipLink {
 		},
 		RelationShipLink{Name: "permissions"},
 	}
+}
+
+func (r *Role) ValidateRelatedLinks() error {
+	return nil
 }
 
 type User struct {
@@ -58,8 +66,16 @@ func (u *User) GetSelfLinksInfo() []RelationShipLink {
 	}
 }
 
+func (u *User) ValidateSelfLinks() error {
+	return nil
+}
+
 func (u *User) GetRelatedLinksInfo() []RelationShipLink {
 	return []RelationShipLink{
 		RelationShipLink{Name: "roles"},
 	}
+}
+
+func (u *User) ValidateRelatedLinks() error {
+	return nil
 }
