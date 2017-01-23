@@ -232,16 +232,25 @@ func GetTypeName(data interface{}) string {
 }
 
 // AttributeNames returns all JSAONAPI attribute names of data interface
-func GetAttributeFields(data interface{}) []string {
+func GetAttributeFields(data interface{}) ([]string, error) {
 	var attr []string
 	t := reflect.TypeOf(data)
-	for i := 0; i < t.NumField(); i++ {
-		v, ok := t.Field(i).Tag.Lookup("json")
+	if t == nil {
+		return attr, fmt.Errorf("received an nil interface")
+	}
+	var st reflect.Type
+	if t.Kind() == reflect.Ptr {
+		st = t.Elem()
+	} else {
+		st = t
+	}
+	for i := 0; i < st.NumField(); i++ {
+		v, ok := st.Field(i).Tag.Lookup("json")
 		if ok && v != "-" {
 			attr = append(attr, v)
 		}
 	}
-	return attr
+	return attr, nil
 }
 
 // GetAllRelationships returns all relationships of data interface
