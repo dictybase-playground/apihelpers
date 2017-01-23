@@ -3,8 +3,10 @@ package aphjsonapi
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 
+	"github.com/dictyBase/apihelpers/aphcollection"
 	"github.com/dictyBase/apihelpers/aphtest"
 	"github.com/dictyBase/go-middlewares/middlewares/pagination"
 	jsapi "github.com/manyminds/api2go/jsonapi"
@@ -260,5 +262,63 @@ func TestPaginationLinks(t *testing.T) {
 	}
 	if !reflect.DeepEqual(pstruct, exstruct) {
 		t.Fatal("expected and generated jsonapi structure did not match")
+	}
+}
+
+func TestGetTypeName(t *testing.T) {
+	r := &Role{
+		ID:          "44",
+		Role:        "Administrator",
+		Description: "The God",
+	}
+	u := &User{
+		ID:    "32",
+		Name:  "Tucker",
+		Email: "tucker@jumbo.com",
+	}
+	rtype := GetTypeName(r)
+	if rtype != "roles" {
+		t.Errorf("actual type %s did not match the expect % type name", rtype, "roles")
+	}
+	utype := GetTypeName(u)
+	if utype != "users" {
+		t.Errorf("actual type %s did not match the expect % type name", utype, "users")
+	}
+}
+
+func TestAttributeFields(t *testing.T) {
+	u := &User{
+		ID:    "32",
+		Name:  "Tucker",
+		Email: "tucker@jumbo.com",
+	}
+	attrs, err := GetAttributeFields(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(attrs) != 2 {
+		t.Fatalf("actual no of attributes %d does not match the expected %d length", len(attrs), 2)
+	}
+	for _, n := range []string{"name", "email"} {
+		if !aphcollection.Contains(attrs, n) {
+			t.Errorf("attribute %s could not be found in collection %s", n, strings.Join(attrs, "|"))
+		}
+	}
+}
+
+func TestAllRelationships(t *testing.T) {
+	u := &User{
+		ID:    "32",
+		Name:  "Tucker",
+		Email: "tucker@jumbo.com",
+	}
+	rels := GetAllRelationships(u)
+	if len(rels) != 2 {
+		t.Fatalf("actual no of relationships %d does not match the expected %d relationships", len(rels), 2)
+	}
+	for _, r := range rels {
+		if r.Name != "roles" {
+			t.Errorf("actual name %s does not match the expected %s one", r.Name, "roles")
+		}
 	}
 }
