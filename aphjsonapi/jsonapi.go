@@ -250,7 +250,7 @@ func GetAttributeFields(data interface{}) []string {
 			attr = append(attr, v)
 		}
 	}
-	return attr, nil
+	return attr
 }
 
 // GetAllRelationships returns all relationships of data interface

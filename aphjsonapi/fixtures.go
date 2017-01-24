@@ -26,8 +26,8 @@ func (r *Role) GetID() string {
 
 func (r *Role) GetSelfLinksInfo() []RelationShipLink {
 	return []RelationShipLink{
-		RelationShipLink{Name: "users"},
-		RelationShipLink{Name: "permissions"},
+		RelationShipLink{Name: "users", Type: "users"},
+		RelationShipLink{Name: "permissions", Type: "permissions"},
 	}
 }
 
@@ -40,8 +40,9 @@ func (r *Role) GetRelatedLinksInfo() []RelationShipLink {
 		RelationShipLink{
 			Name:           "users",
 			SuffixFragment: fmt.Sprintf("%s/%s/%s", "roles", r.GetID(), "consumers"),
+			Type:           "users",
 		},
-		RelationShipLink{Name: "permissions"},
+		RelationShipLink{Name: "permissions", Type: "users"},
 	}
 }
 
@@ -62,7 +63,7 @@ func (u *User) GetID() string {
 
 func (u *User) GetSelfLinksInfo() []RelationShipLink {
 	return []RelationShipLink{
-		RelationShipLink{Name: "roles"},
+		RelationShipLink{Name: "roles", Type: "roles"},
 	}
 }
 
@@ -72,7 +73,7 @@ func (u *User) ValidateSelfLinks() error {
 
 func (u *User) GetRelatedLinksInfo() []RelationShipLink {
 	return []RelationShipLink{
-		RelationShipLink{Name: "roles"},
+		RelationShipLink{Name: "roles", Type: "roles"},
 	}
 }
 
