@@ -27,6 +27,8 @@ var (
 	ErrStructMarshal = newErrorClass("Structure marshalling error", http.StatusInternalServerError)
 	//ErrIncludeParam represents any error with invalid include query parameter
 	ErrIncludeParam = newErrorClassWithParam("Invalid include query parameter", "include", http.StatusBadRequest)
+	//ErrSparseFieldSets represents any error with invalid sparse fieldsets query parameter
+	ErrSparseFieldSets = newErrorClassWithParam("Invalid sparse fieldsets query parameter", "fieldsets", http.StatusBadRequest)
 	//ErrNotAcceptable represents any error with wrong or inappropriate http Accept header
 	ErrNotAcceptable = newErrorClass("Accept header is not acceptable", http.StatusNotAcceptable)
 	//ErrUnsupportedMedia represents any error with unsupported media type in http header
