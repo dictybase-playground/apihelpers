@@ -232,11 +232,11 @@ func GetTypeName(data interface{}) string {
 }
 
 // AttributeNames returns all JSAONAPI attribute names of data interface
-func GetAttributeFields(data interface{}) ([]string, error) {
+func GetAttributeFields(data interface{}) []string {
 	var attr []string
 	t := reflect.TypeOf(data)
 	if t == nil {
-		return attr, fmt.Errorf("received an nil interface")
+		return attr
 	}
 	var st reflect.Type
 	if t.Kind() == reflect.Ptr {
