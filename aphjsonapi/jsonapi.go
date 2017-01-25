@@ -231,7 +231,7 @@ func GetTypeName(data interface{}) string {
 	return jsapi.Pluralize(jsapi.Jsonify(rType.Name()))
 }
 
-// AttributeNames returns all JSAONAPI attribute names of data interface
+// GetAttributeNames returns all JSAONAPI attribute names of data interface
 func GetAttributeFields(data interface{}) []string {
 	var attr []string
 	t := reflect.TypeOf(data)
@@ -248,6 +248,31 @@ func GetAttributeFields(data interface{}) []string {
 		v, ok := st.Field(i).Tag.Lookup("json")
 		if ok && v != "-" {
 			attr = append(attr, v)
+		}
+	}
+	return attr
+}
+
+// GetFilterAttributes gets all the JSONAPI attributes that are allowed to match filter query params
+func GetFilterAttributes(data interface{}) []string {
+	var attr []string
+	t := reflect.TypeOf(data)
+	if t == nil {
+		return attr
+	}
+	var st reflect.Type
+	if t.Kind() == reflect.Ptr {
+		st = t.Elem()
+	} else {
+		st = t
+	}
+	for i := 0; i < st.NumField(); i++ {
+		v, ok := st.Field(i).Tag.Lookup("json")
+		if ok && v != "-" {
+			_, ok := st.Field(i).Tag.Lookup("filter")
+			if ok {
+				attr = append(attr, v)
+			}
 		}
 	}
 	return attr
