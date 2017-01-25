@@ -29,6 +29,8 @@ var (
 	ErrIncludeParam = newErrorClassWithParam("Invalid include query parameter", "include", http.StatusBadRequest)
 	//ErrSparseFieldSets represents any error with invalid sparse fieldsets query parameter
 	ErrSparseFieldSets = newErrorClassWithParam("Invalid sparse fieldsets query parameter", "fieldsets", http.StatusBadRequest)
+	//ErrFilterParam represents any error with invalid filter query paramter
+	ErrFilterParam = newErrorClassWithParam("Invalid filter query parameter", "filter", http.StatusBadRequest)
 	//ErrNotAcceptable represents any error with wrong or inappropriate http Accept header
 	ErrNotAcceptable = newErrorClass("Accept header is not acceptable", http.StatusNotAcceptable)
 	//ErrUnsupportedMedia represents any error with unsupported media type in http header
