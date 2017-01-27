@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"github.com/dictyBase/go-middlewares/middlewares/query"
 	"github.com/dictyBase/go-middlewares/middlewares/router"
 	"github.com/julienschmidt/httprouter"
 )
@@ -13,6 +14,7 @@ import (
 // a ResponseBuilder object
 type RequestBuilder interface {
 	AddRouterParam(string, string) RequestBuilder
+	AddIncludes(...string) RequestBuilder
 	Expect() ResponseBuilder
 }
 
@@ -31,6 +33,23 @@ func NewHTTPRequestBuilder(rep Reporter, req *http.Request, fn http.HandlerFunc)
 		reporter:  rep,
 		req:       req,
 	}
+}
+
+// AddIncludes adds JSONAPI include resources in the http request context
+func (b *HTTPRequestBuilder) AddIncludes(resources ...string) RequestBuilder {
+	p, ok := b.req.Context().Value(query.ContextKeyQueryParams).(*query.Params)
+	if ok {
+		p.Includes = append(p.Includes, resources...)
+		p.HasIncludes = true
+	} else {
+		p = &query.Params{
+			HasIncludes: true,
+			Includes:    resources,
+		}
+	}
+	ctx := context.WithValue(b.req.Context(), query.ContextKeyQueryParams, p)
+	b.req = b.req.WithContext(ctx)
+	return b
 }
 
 // AddRouterParam add key and value to httprouter's parameters
