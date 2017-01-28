@@ -41,17 +41,23 @@ func NewHTTPResponseBuilder(rep Reporter, w *httptest.ResponseRecorder) Response
 
 // Status matches the expected and actual http status
 func (b *HTTPResponseBuilder) Status(status int) ResponseBuilder {
-	failure := false
 	if b.response.Code != status {
-		failure = true
-		b.reporter.Errorf("actual http status %d did not match with expected status %d\n", b.response.Code, status)
+		b.failed = true
+		b.reporter.Errorf(
+			"actual http status %d did not match with expected status %d with error body %s\n",
+			b.response.Code,
+			status,
+			string(IndentJSON(b.response.Body.Bytes())),
+		)
 	}
-	b.failed = failure
 	return b
 }
 
 // JSON return a container type for introspecting json response
 func (b *HTTPResponseBuilder) JSON() *gabs.Container {
+	if b.failed {
+		b.reporter.Fatal("errors stopped any further processing")
+	}
 	body := b.response.Body.Bytes()
 	cont, err := gabs.ParseJSON(body)
 	if err != nil {
