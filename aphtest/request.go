@@ -15,6 +15,7 @@ import (
 type RequestBuilder interface {
 	AddRouterParam(string, string) RequestBuilder
 	AddIncludes(...string) RequestBuilder
+	AddFieldSets(string, bool, ...string) RequestBuilder
 	Expect() ResponseBuilder
 }
 
@@ -52,6 +53,27 @@ func (b *HTTPRequestBuilder) AddIncludes(resources ...string) RequestBuilder {
 	return b
 }
 
+// AddFieldSets adds JSONAPI sparse fieldsets in the http request context
+func (b *HTTPRequestBuilder) AddFieldSets(resource string, relationship bool, fields ...string) RequestBuilder {
+	p, ok := b.req.Context().Value(query.ContextKeyQueryParams).(*query.Params)
+	f := &query.Fields{Relationship: relationship}
+	f.Append(fields...)
+	if ok {
+		p.SparseFields[resource] = f
+		p.HasSparseFields = true
+	} else {
+		p = &query.Params{
+			HasSparseFields: true,
+			SparseFields: map[string]*query.Fields{
+				resource: f,
+			},
+		}
+	}
+	ctx := context.WithValue(b.req.Context(), query.ContextKeyQueryParams, p)
+	b.req = b.req.WithContext(ctx)
+	return b
+}
+
 // AddRouterParam add key and value to httprouter's parameters
 func (b *HTTPRequestBuilder) AddRouterParam(key, value string) RequestBuilder {
 	if len(b.params) > 0 {
@@ -68,7 +90,7 @@ func (b *HTTPRequestBuilder) AddRouterParam(key, value string) RequestBuilder {
 func (b *HTTPRequestBuilder) Expect() ResponseBuilder {
 	req := b.req
 	if len(b.params) > 0 {
-		ctx := context.WithValue(context.Background(), router.ContextKeyParams, b.params)
+		ctx := context.WithValue(b.req.Context(), router.ContextKeyParams, b.params)
 		req = b.req.WithContext(ctx)
 	}
 	w := httptest.NewRecorder()
