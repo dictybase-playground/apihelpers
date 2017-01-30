@@ -1,6 +1,7 @@
 package aphjsonapi
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -265,6 +266,45 @@ func TestPaginationLinks(t *testing.T) {
 	}
 }
 
+func TestIncludes(t *testing.T) {
+	srvinfo := aphtest.NewTestApiInfo()
+	bslink := generateBaseLink(srvinfo)
+	u := &User{
+		ID:    "32",
+		Name:  "Tucker",
+		Email: "tucker@jumbo.com",
+		Roles: []*Role{
+			&Role{
+				ID:          "44",
+				Role:        "Administrator",
+				Description: "The God",
+			},
+			&Role{
+				ID:          "45",
+				Role:        "Management",
+				Description: "The collector",
+			},
+		},
+	}
+	pstruct, err := MarshalToStructWrapper(u, srvinfo)
+	if err != nil {
+		t.Fatalf("error in marshaling to structure %s\n", err)
+	}
+	if len(pstruct.Included) != 2 {
+		b, _ := json.Marshal(pstruct)
+		t.Fatalf("no included members %s\n", string(b))
+	}
+	istruct := pstruct.Included[0]
+	if istruct.Type != "roles" {
+		t.Errorf("actual %s expected %s type\n", istruct.Type, "roles")
+	}
+	explink := istruct.Relationships["users"].Links.Related
+	rlink := fmt.Sprintf("%s/%s/%s/%s", bslink, "roles", istruct.ID, "consumers")
+	if explink != rlink {
+		t.Errorf("actual %s link expected %s", rlink, explink)
+	}
+}
+
 func TestGetTypeName(t *testing.T) {
 	r := &Role{
 		ID:          "44",
@@ -292,10 +332,7 @@ func TestAttributeFields(t *testing.T) {
 		Name:  "Tucker",
 		Email: "tucker@jumbo.com",
 	}
-	attrs, err := GetAttributeFields(u)
-	if err != nil {
-		t.Fatal(err)
-	}
+	attrs := GetAttributeFields(u)
 	if len(attrs) != 2 {
 		t.Fatalf("actual no of attributes %d does not match the expected %d length", len(attrs), 2)
 	}

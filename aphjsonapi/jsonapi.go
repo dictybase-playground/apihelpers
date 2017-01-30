@@ -109,6 +109,15 @@ func MarshalToStructWrapper(data interface{}, ep jsapi.ServerInformation) (*jsap
 			jst.Data.DataArray[i].Relationships = r
 		}
 	} else {
+		// Handle included members
+		if len(jst.Included) > 0 {
+			for i, m := range jst.Included {
+				inrel := generateIncludedRelationshipLinks(data, &m, ep)
+				if len(inrel) > 0 {
+					jst.Included[i].Relationships = inrel
+				}
+			}
+		}
 		jst.Links = &jsapi.Links{Self: generateSingleResourceLink(jst.Data.DataObject, ep)}
 		relationships := generateRelationshipLinks(data, jst.Data.DataObject, ep)
 		if len(relationships) > 0 {
@@ -190,6 +199,17 @@ func generateRelationshipLinks(data interface{}, jdata *jsapi.Data, ep jsapi.Ser
 			} else {
 				relationships[rel.Name] = jsapi.Relationship{Links: &jsapi.Links{Related: rlink}}
 			}
+		}
+	}
+	return relationships
+}
+
+func generateIncludedRelationshipLinks(data interface{}, jdata *jsapi.Data, ep jsapi.ServerInformation) map[string]jsapi.Relationship {
+	relationships := make(map[string]jsapi.Relationship)
+	if r, ok := data.(jsapi.MarshalIncludedRelations); ok {
+		mi := r.GetReferencedStructs()
+		if len(mi) > 0 {
+			relationships = generateRelationshipLinks(mi[0], jdata, ep)
 		}
 	}
 	return relationships
