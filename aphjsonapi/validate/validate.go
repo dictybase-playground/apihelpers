@@ -39,17 +39,15 @@ func HasRelationships(a []string, rs []jsapi.RelationShipLink) error {
 
 // RelationshipResourceType checks if the given resource name matches any type
 // in the relationship rs slice and returns the type name
-func RelationshipResourceType(name string, rs []jsapi.RelationShipLink) (string, error) {
-	var t string
-	for _, r := range rs {
-		if err := validate.Struct(r); err != nil {
-			return t, err
-		}
-		if name == r.Type {
-			return r.Type, nil
+func RelationshipResourceType(name string, data interface{}) (string, error) {
+	if japi, ok := data.(jsonapi.MarshalReferences); ok {
+		for _, r := range japi.GetReferences() {
+			if name == r.Type {
+				return r.Type, nil
+			}
 		}
 	}
-	return t, fmt.Errorf("%s resource type does not matches any relationship type", name)
+	return "", fmt.Errorf("%s resource type does not matches any relationship type", name)
 }
 
 //getRelatedTypeNames returns the JSONAPI types of the related resources using
