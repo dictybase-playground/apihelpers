@@ -266,6 +266,50 @@ func TestPaginationLinks(t *testing.T) {
 	}
 }
 
+func TestCollectionIncludes(t *testing.T) {
+	srvinfo := aphtest.NewTestApiInfo()
+	users := []*User{
+		&User{
+			ID:    "12",
+			Name:  "Caboose",
+			Email: "caboose@caboose.com",
+			Roles: []*Role{
+				&Role{
+					ID:          "44",
+					Role:        "Administrator",
+					Description: "The God",
+				},
+				&Role{
+					ID:          "45",
+					Role:        "Management",
+					Description: "The collector",
+				},
+			},
+		},
+		&User{
+			ID:    "21",
+			Name:  "Damon",
+			Email: "damon@damon.com",
+		},
+	}
+	pstruct, err := MarshalToStructWrapper(users, srvinfo)
+	if err != nil {
+		t.Errorf("error in marshaling to structure %s\n", err)
+	}
+	if len(pstruct.Included) != 2 {
+		b, _ := json.Marshal(pstruct)
+		t.Fatalf("no included members %s\n", string(b))
+	}
+	istruct := pstruct.Included[0]
+	if istruct.Type != "roles" {
+		t.Errorf("actual %s expected %s type\n", istruct.Type, "roles")
+	}
+	if len(pstruct.Data.DataArray[0].Relationships["roles"].Data.DataArray) != 2 {
+		b, _ := json.Marshal(pstruct)
+		t.Errorf("no included data members in relationship %s\n", string(b))
+	}
+}
+
 func TestIncludes(t *testing.T) {
 	srvinfo := aphtest.NewTestApiInfo()
 	bslink := generateBaseLink(srvinfo)
