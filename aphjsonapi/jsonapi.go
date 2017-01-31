@@ -15,28 +15,20 @@ import (
 // RelationshipLink is a container type for having information about
 // relationship links
 type RelationShipLink struct {
-	Name string `validate:"required"`
+	Name string
 	// To override the default links, it will be appended to
 	// the base url.
 	SuffixFragment string
-	// The type(type key in JSAONAPI specs) of relationship resource
-	Type string `validate:"required"`
 }
 
 // MarshalSelfRelations is an interface  for creating self relationship links
 type MarshalSelfRelations interface {
-	// Validates all instances of RelationshipLink structures, using
-	// https://gopkg.in/go-playground/validator.v9 package is recommended
-	ValidateSelfLinks() error
 	GetSelfLinksInfo() []RelationShipLink
 }
 
 // MarshalRelatedRelations is an interface  for creating related relationship
 // links
 type MarshalRelatedRelations interface {
-	// Validates all instances of RelationshipLink structures, using
-	// https://gopkg.in/go-playground/validator.v9 package is recommended
-	ValidateRelatedLinks() error
 	GetRelatedLinksInfo() []RelationShipLink
 }
 
