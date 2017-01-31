@@ -303,6 +303,10 @@ func TestIncludes(t *testing.T) {
 	if explink != rlink {
 		t.Errorf("actual %s link expected %s", rlink, explink)
 	}
+	if len(pstruct.Data.DataObject.Relationships["roles"].Data.DataArray) != 2 {
+		b, _ := json.Marshal(pstruct)
+		t.Errorf("no included data members in relationship %s\n", string(b))
+	}
 }
 
 func TestGetTypeName(t *testing.T) {

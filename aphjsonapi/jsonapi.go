@@ -106,7 +106,29 @@ func MarshalToStructWrapper(data interface{}, ep jsapi.ServerInformation) (*jsap
 			jst.Data.DataArray[i].Links = &jsapi.Links{Self: generateSingleResourceLink(&d, ep)}
 			// Add relationships to every member
 			r := generateRelationshipLinks(value, &d, ep)
-			jst.Data.DataArray[i].Relationships = r
+			if len(r) > 0 {
+				if len(jst.Included) > 0 && len(jst.Data.DataArray[i].Relationships) > 0 {
+					for k, rel := range r {
+						if excel, ok := jst.Data.DataArray[i].Relationships[k]; ok {
+							excel.Links = rel.Links
+							jst.Data.DataArray[i].Relationships[k] = excel
+						} else {
+							jst.Data.DataArray[i].Relationships[k] = rel
+						}
+					}
+				} else {
+					jst.Data.DataArray[i].Relationships = r
+				}
+			}
+		}
+		// Handle included members
+		if len(jst.Included) > 0 {
+			for i, m := range jst.Included {
+				inrel := generateIncludedRelationshipLinks(value, &m, ep)
+				if len(inrel) > 0 {
+					jst.Included[i].Relationships = inrel
+				}
+			}
 		}
 	} else {
 		// Handle included members
@@ -121,7 +143,18 @@ func MarshalToStructWrapper(data interface{}, ep jsapi.ServerInformation) (*jsap
 		jst.Links = &jsapi.Links{Self: generateSingleResourceLink(jst.Data.DataObject, ep)}
 		relationships := generateRelationshipLinks(data, jst.Data.DataObject, ep)
 		if len(relationships) > 0 {
-			jst.Data.DataObject.Relationships = relationships
+			if len(jst.Included) > 0 && len(jst.Data.DataObject.Relationships) > 0 {
+				for k, rel := range relationships {
+					if excel, ok := jst.Data.DataObject.Relationships[k]; ok {
+						excel.Links = rel.Links
+						jst.Data.DataObject.Relationships[k] = excel
+					} else {
+						jst.Data.DataObject.Relationships[k] = rel
+					}
+				}
+			} else {
+				jst.Data.DataObject.Relationships = relationships
+			}
 		}
 	}
 	return jst, nil
