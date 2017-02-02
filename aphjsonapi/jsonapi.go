@@ -292,10 +292,21 @@ func GetAttributeFields(data interface{}) []string {
 	for i := 0; i < st.NumField(); i++ {
 		v, ok := st.Field(i).Tag.Lookup("json")
 		if ok && v != "-" {
-			attr = append(attr, v)
+			attr = append(attr, parseTagValue(v))
 		}
 	}
 	return attr
+}
+
+func parseTagValue(value string) string {
+	if strings.Contains(value, ",") {
+		for _, jv := range strings.Split(value, ",") {
+			if jv != "omitempty" {
+				return jv
+			}
+		}
+	}
+	return value
 }
 
 // GetFilterAttributes gets all the JSONAPI attributes that are allowed to match filter query params

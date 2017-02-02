@@ -27,13 +27,9 @@ func (r *Role) GetID() string {
 
 func (r *Role) GetSelfLinksInfo() []RelationShipLink {
 	return []RelationShipLink{
-		RelationShipLink{Name: "users", Type: "users"},
-		RelationShipLink{Name: "permissions", Type: "permissions"},
+		RelationShipLink{Name: "users"},
+		RelationShipLink{Name: "permissions"},
 	}
-}
-
-func (r *Role) ValidateSelfLinks() error {
-	return nil
 }
 
 func (r *Role) GetRelatedLinksInfo() []RelationShipLink {
@@ -41,20 +37,15 @@ func (r *Role) GetRelatedLinksInfo() []RelationShipLink {
 		RelationShipLink{
 			Name:           "users",
 			SuffixFragment: fmt.Sprintf("%s/%s/%s", "roles", r.GetID(), "consumers"),
-			Type:           "users",
 		},
-		RelationShipLink{Name: "permissions", Type: "users"},
+		RelationShipLink{Name: "permissions"},
 	}
-}
-
-func (r *Role) ValidateRelatedLinks() error {
-	return nil
 }
 
 type User struct {
 	ID    string  `json:"-"`
-	Name  string  `json:"name"`
-	Email string  `json:"email"`
+	Name  string  `json:"name,omitempty"`
+	Email string  `json:"email,omitempty"`
 	Roles []*Role `json:"-"`
 }
 
@@ -66,23 +57,15 @@ func (u *User) GetID() string {
 // GetSelfLinksInfo satisfies MarshalSelfRelations interface
 func (u *User) GetSelfLinksInfo() []RelationShipLink {
 	return []RelationShipLink{
-		RelationShipLink{Name: "roles", Type: "roles"},
+		RelationShipLink{Name: "roles"},
 	}
-}
-
-func (u *User) ValidateSelfLinks() error {
-	return nil
 }
 
 // GetSelfLinksInfo satisfies MarshalRelatedRelations interface
 func (u *User) GetRelatedLinksInfo() []RelationShipLink {
 	return []RelationShipLink{
-		RelationShipLink{Name: "roles", Type: "roles"},
+		RelationShipLink{Name: "roles"},
 	}
-}
-
-func (u *User) ValidateRelatedLinks() error {
-	return nil
 }
 
 // GetReferences satisfies jsonapi.MarshalReferences interface
@@ -97,6 +80,15 @@ func (u *User) GetReferencedStructs() []jsonapi.MarshalIdentifier {
 	var result []jsonapi.MarshalIdentifier
 	for _, r := range u.Roles {
 		result = append(result, r)
+	}
+	return result
+}
+
+// GetReferencedIDs satisfies jsonapi.MarshalLinkedRelations interface
+func (u *User) GetReferencedIDs() []jsonapi.ReferenceID {
+	var result []jsonapi.ReferenceID
+	for _, r := range u.Roles {
+		result = append(result, jsonapi.ReferenceID{Type: "roles", ID: r.ID, Name: "roles"})
 	}
 	return result
 }
