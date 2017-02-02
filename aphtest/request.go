@@ -36,16 +36,16 @@ func NewHTTPRequestBuilder(rep Reporter, req *http.Request, fn http.HandlerFunc)
 	}
 }
 
-// AddIncludes adds JSONAPI include resources in the http request context
-func (b *HTTPRequestBuilder) AddIncludes(resources ...string) RequestBuilder {
+// AddIncludes adds relationships includes of JSONAPI  in the http request context
+func (b *HTTPRequestBuilder) AddIncludes(relationships ...string) RequestBuilder {
 	p, ok := b.req.Context().Value(query.ContextKeyQueryParams).(*query.Params)
 	if ok {
-		p.Includes = append(p.Includes, resources...)
+		p.Includes = append(p.Includes, relationships...)
 		p.HasIncludes = true
 	} else {
 		p = &query.Params{
 			HasIncludes: true,
-			Includes:    resources,
+			Includes:    relationships,
 		}
 	}
 	ctx := context.WithValue(b.req.Context(), query.ContextKeyQueryParams, p)
@@ -53,7 +53,7 @@ func (b *HTTPRequestBuilder) AddIncludes(resources ...string) RequestBuilder {
 	return b
 }
 
-// AddFieldSets adds JSONAPI sparse fieldsets in the http request context
+// AddFieldSets adds sparse fieldsets of JSONAPI in the http request context
 func (b *HTTPRequestBuilder) AddFieldSets(resource string, relationship bool, fields ...string) RequestBuilder {
 	p, ok := b.req.Context().Value(query.ContextKeyQueryParams).(*query.Params)
 	f := &query.Fields{Relationship: relationship}
