@@ -1,4 +1,4 @@
-// Package modwaretest provides common constants and functions for unit testing
+// Package aphtest provides common constants and functions for unit testing
 package aphtest
 
 import (
@@ -16,24 +16,25 @@ const (
 	PubID = "99"
 )
 
-type TestApiInfo struct {
+// TestAPIInfo implements jsonapi.ServerInformation
+type TestAPIInfo struct {
 	BaseURL string
 	Prefix  string
 }
 
 //GetBaseURL returns the base path of the api
-func (server *TestApiInfo) GetBaseURL() string {
+func (server *TestAPIInfo) GetBaseURL() string {
 	return server.BaseURL
 }
 
 //GetPrefix returns generic prefix for each api path
-func (server *TestApiInfo) GetPrefix() string {
+func (server *TestAPIInfo) GetPrefix() string {
 	return server.Prefix
 }
 
-//NewTestApiInfo is a constructor for TestApiInfo
-func NewTestApiInfo() *TestApiInfo {
-	return &TestApiInfo{APIHost, PathPrefix}
+//NewTestApiInfo is a constructor for TestAPIInfo
+func NewTestApiInfo() *TestAPIInfo {
+	return &TestAPIInfo{APIHost, PathPrefix}
 }
 
 // IndentJSON uniformly indent the json byte
