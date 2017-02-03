@@ -40,8 +40,12 @@ func NewHTTPRequestBuilder(rep Reporter, req *http.Request, fn http.HandlerFunc)
 func (b *HTTPRequestBuilder) AddIncludes(relationships ...string) RequestBuilder {
 	p, ok := b.req.Context().Value(query.ContextKeyQueryParams).(*query.Params)
 	if ok {
-		p.Includes = append(p.Includes, relationships...)
-		p.HasIncludes = true
+		if p.HasIncludes {
+			p.Includes = append(p.Includes, relationships...)
+		} else {
+			p.Includes = relationships
+			p.HasIncludes = true
+		}
 	} else {
 		p = &query.Params{
 			HasIncludes: true,
@@ -59,8 +63,14 @@ func (b *HTTPRequestBuilder) AddFieldSets(resource string, relationship bool, fi
 	f := &query.Fields{Relationship: relationship}
 	f.Append(fields...)
 	if ok {
-		p.SparseFields[resource] = f
-		p.HasSparseFields = true
+		if p.HasSparseFields {
+			p.SparseFields[resource] = f
+		} else {
+			p.HasSparseFields = true
+			p.SparseFields = map[string]*query.Fields{
+				resource: f,
+			}
+		}
 	} else {
 		p = &query.Params{
 			HasSparseFields: true,
