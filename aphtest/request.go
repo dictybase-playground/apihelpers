@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"github.com/dictyBase/go-middlewares/middlewares/pagination"
 	"github.com/dictyBase/go-middlewares/middlewares/query"
 	"github.com/dictyBase/go-middlewares/middlewares/router"
 	"github.com/julienschmidt/httprouter"
@@ -53,6 +54,24 @@ func (b *HTTPRequestBuilder) AddIncludes(relationships ...string) RequestBuilder
 		}
 	}
 	ctx := context.WithValue(b.req.Context(), query.ContextKeyQueryParams, p)
+	b.req = b.req.WithContext(ctx)
+	return b
+}
+
+// AddPagination adds two pagination properties, current page and entries per
+// page in the request context. If the properties exist, it overwrite them
+func (b *HTTPRequestBuilder) AddPagination(page, entries int) RequestBuilder {
+	prop, ok := r.Context().Value(pagination.ContextKeyPagination).(*pagination.Props)
+	if ok {
+		prop.Current = page
+		prop.Entries = entires
+	} else {
+		prop = &pagination.Props{
+			Current: page,
+			Entries: entries,
+		}
+	}
+	ctx := context.WithValue(b.req.Context(), pagination.ContextKeyPagination, prop)
 	b.req = b.req.WithContext(ctx)
 	return b
 }
