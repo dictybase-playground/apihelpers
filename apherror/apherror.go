@@ -75,14 +75,16 @@ func JSONAPIError(w http.ResponseWriter, err error) {
 			"creator": "api error helper",
 		},
 	}
+	errSource := new(api2go.ErrorSource)
 	pointer, ok := errors.GetData(err, pointerErrKey).(string)
 	if ok {
-		jsnErr.Source.Pointer = pointer
+		errSource.Pointer = pointer
 	}
 	param, ok := errors.GetData(err, paramErrKey).(string)
 	if ok {
-		jsnErr.Source.Parameter = param
+		errSource.Parameter = param
 	}
+	jsnErr.Source = errSource
 	w.Header().Set("Content-Type", "application/vnd.api+json")
 	w.WriteHeader(status)
 	encErr := json.NewEncoder(w).Encode(api2go.HTTPError{Errors: []api2go.Error{jsnErr}})
