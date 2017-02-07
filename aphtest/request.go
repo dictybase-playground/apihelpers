@@ -16,6 +16,7 @@ import (
 type RequestBuilder interface {
 	AddRouterParam(string, string) RequestBuilder
 	AddIncludes(...string) RequestBuilder
+	AddPagination(int, int) RequestBuilder
 	AddFieldSets(string, bool, ...string) RequestBuilder
 	Expect() ResponseBuilder
 }
@@ -59,12 +60,12 @@ func (b *HTTPRequestBuilder) AddIncludes(relationships ...string) RequestBuilder
 }
 
 // AddPagination adds two pagination properties, current page and entries per
-// page in the request context. If the properties exist, it overwrite them
+// page in the request context. If the overwrites the existing value
 func (b *HTTPRequestBuilder) AddPagination(page, entries int) RequestBuilder {
-	prop, ok := r.Context().Value(pagination.ContextKeyPagination).(*pagination.Props)
+	prop, ok := b.req.Context().Value(pagination.ContextKeyPagination).(*pagination.Props)
 	if ok {
 		prop.Current = page
-		prop.Entries = entires
+		prop.Entries = entries
 	} else {
 		prop = &pagination.Props{
 			Current: page,

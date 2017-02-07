@@ -28,6 +28,7 @@ type Resource interface {
 // ExpectBuilder interface is for incremental building of http configuration
 type ExpectBuilder interface {
 	Get(string) RequestBuilder
+	GetAll(string) RequestBuilder
 }
 
 // HTTPExpectBuilder implements ExpectBuilder interface
@@ -58,4 +59,18 @@ func (b *HTTPExpectBuilder) Get(path string) RequestBuilder {
 		nil,
 	)
 	return NewHTTPRequestBuilder(b.reporter, req, b.resource.Get)
+}
+
+// GetAll configures Request to execute a http GET request to a collection resource
+func (b *HTTPExpectBuilder) GetAll(path string) RequestBuilder {
+	req := httptest.NewRequest(
+		"GET",
+		fmt.Sprintf(
+			"%s/%s",
+			b.host,
+			strings.Trim(path, "/"),
+		),
+		nil,
+	)
+	return NewHTTPRequestBuilder(b.reporter, req, b.resource.GetAll)
 }
