@@ -64,6 +64,9 @@ func MarshalWithPagination(data interface{}, ep jsapi.ServerInformation, opt *pa
 		pageLink.Previous = generatePaginatedResourceLink(baseLink, opt.Current-1, opt.Entries)
 	}
 	lastPage := int(math.Floor(float64(opt.Records) / float64(opt.Entries)))
+	if math.Mod(float64(opt.Records), float64(opt.Entries)) > 0 {
+		lastPage += 1
+	}
 	pageLink.Last = generatePaginatedResourceLink(baseLink, lastPage, opt.Entries)
 	if opt.Current != lastPage {
 		pageLink.Next = generatePaginatedResourceLink(baseLink, opt.Current+1, opt.Entries)
