@@ -44,8 +44,8 @@ func (r *Role) GetRelatedLinksInfo() []RelationShipLink {
 
 type User struct {
 	ID    string  `json:"-"`
-	Name  string  `json:"name,omitempty"`
-	Email string  `json:"email,omitempty"`
+	Name  string  `json:"name,omitempty" filter:"-"`
+	Email string  `json:"email,omitempty" filter:"-"`
 	Roles []*Role `json:"-"`
 }
 

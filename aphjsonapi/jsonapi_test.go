@@ -374,6 +374,23 @@ func TestGetTypeName(t *testing.T) {
 	}
 }
 
+func TestFilterAttributes(t *testing.T) {
+	u := &User{
+		ID:    "32",
+		Name:  "Tucker",
+		Email: "tucker@jumbo.com",
+	}
+	attrs := GetFilterAttributes(u)
+	if len(attrs) != 2 {
+		t.Fatalf("actual no of filter attributes %d does not match the expected %d length", len(attrs), 2)
+	}
+	for _, n := range []string{"name", "email"} {
+		if !aphcollection.Contains(attrs, n) {
+			t.Errorf("attribute %s could not be found in collection %s", n, strings.Join(attrs, "|"))
+		}
+	}
+}
+
 func TestAttributeFields(t *testing.T) {
 	u := &User{
 		ID:    "32",

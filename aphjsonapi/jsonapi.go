@@ -330,7 +330,7 @@ func GetFilterAttributes(data interface{}) []string {
 		if ok && v != "-" {
 			_, ok := st.Field(i).Tag.Lookup("filter")
 			if ok {
-				attr = append(attr, v)
+				attr = append(attr, parseTagValue(v))
 			}
 		}
 	}
