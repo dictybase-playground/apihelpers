@@ -18,6 +18,7 @@ type RequestBuilder interface {
 	AddIncludes(...string) RequestBuilder
 	AddPagination(int, int) RequestBuilder
 	AddFieldSets(string, bool, ...string) RequestBuilder
+	AddFilter(string, string) RequestBuilder
 	Expect() ResponseBuilder
 }
 
@@ -52,6 +53,26 @@ func (b *HTTPRequestBuilder) AddIncludes(relationships ...string) RequestBuilder
 		p = &query.Params{
 			HasIncludes: true,
 			Includes:    relationships,
+		}
+	}
+	ctx := context.WithValue(b.req.Context(), query.ContextKeyQueryParams, p)
+	b.req = b.req.WithContext(ctx)
+	return b
+}
+
+// AddFilter adds JSONAPI filter query parameters in the http request context
+func (b *HTTPRequestBuilder) AddFilter(column, text string) RequestBuilder {
+	p, ok := b.req.Context().Value(query.ContextKeyQueryParams).(*query.Params)
+	if ok {
+		if p.HasFilters {
+			p.Filters[column] = text
+		} else {
+			p.Filters = map[string]string{column: text}
+		}
+	} else {
+		p = &query.Params{
+			HasFilters: true,
+			Filters:    map[string]string{column: text},
 		}
 	}
 	ctx := context.WithValue(b.req.Context(), query.ContextKeyQueryParams, p)
