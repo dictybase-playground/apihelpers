@@ -68,6 +68,7 @@ func (b *HTTPRequestBuilder) AddFilter(column, text string) RequestBuilder {
 			p.Filters[column] = text
 		} else {
 			p.Filters = map[string]string{column: text}
+			p.HasFilters = true
 		}
 	} else {
 		p = &query.Params{
