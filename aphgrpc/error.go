@@ -1,6 +1,6 @@
-// Package grpcerror provides handlers and utility functions to customize error
-// handling of grpc-gateway https://github.com/grpc-ecosystem/grpc-gateway
-package grpcerror
+// Package aphgrpc provides various interfaces, functions, types
+// for building and working with gRPC services.
+package aphgrpc
 
 import (
 	"encoding/json"
