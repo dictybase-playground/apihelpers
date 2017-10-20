@@ -34,7 +34,7 @@ var (
 	//ErrIncludeParam represents any error with invalid include query parameter
 	ErrIncludeParam = newErrorWithParam("Invalid include query parameter", "include")
 	//ErrSparseFieldSets represents any error with invalid sparse fieldsets query parameter
-	ErrSparseFieldSets = newErrorWithParam("Invalid sparse fieldsets query parameter", "fieldsets")
+	ErrFields = newErrorWithParam("Invalid field query parameter", "field")
 	//ErrFilterParam represents any error with invalid filter query paramter
 	ErrFilterParam = newErrorWithParam("Invalid filter query parameter", "filter")
 	//ErrNotAcceptable represents any error with wrong or inappropriate http Accept header
