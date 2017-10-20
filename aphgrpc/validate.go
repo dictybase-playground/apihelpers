@@ -6,6 +6,7 @@ import (
 
 	"github.com/dictyBase/apihelpers/aphcollection"
 	"github.com/dictyBase/go-genproto/dictybaseapis/api/jsonapi"
+	"google.golang.org/grpc/metadata"
 )
 
 // JSONAPIParams is container for various JSON API query parameters
@@ -34,8 +35,9 @@ func hasFields(r *jsonapi.GetRequest) bool {
 	return false
 }
 
-// ValidateInclude validate and parse the JSON API include and fields parameters
-func ValidateAndParseParams(jsapi JSONAPIAllowedParams, r *jsonapi.GetRequest) (*JSONAPIParams, error) {
+// ValidateAndParseGetParams validate and parse the JSON API include and fields parameters
+// that are used for singular resources
+func ValidateAndParseGetParams(jsapi JSONAPIAllowedParams, r *jsonapi.GetRequest) (*JSONAPIParams, metadata.MD, error) {
 	params := &JSONAPIParams{}
 	if hasInclude(r) {
 		if strings.Contains(r.Include, ",") {
@@ -45,7 +47,7 @@ func ValidateAndParseParams(jsapi JSONAPIAllowedParams, r *jsonapi.GetRequest) (
 		}
 		for _, v := range params.Includes {
 			if !aphcollection.Contains(jsapi.AllowedInclude(), v) {
-				return params, fmt.Errorf("include %s relationship is not allowed", v)
+				return params, ErrIncludeParam, fmt.Errorf("include %s relationship is not allowed", v)
 			}
 		}
 	} else {
@@ -60,11 +62,11 @@ func ValidateAndParseParams(jsapi JSONAPIAllowedParams, r *jsonapi.GetRequest) (
 		}
 		for _, v := range params.Fields {
 			if !aphcollection.Contains(jsapi.AllowedFields(), v) {
-				return params, fmt.Errorf("%s value in fields is not allowed", v)
+				return params, ErrFilterParam, fmt.Errorf("%s value in fields is not allowed", v)
 			}
 		}
 	} else {
 		params.HasFields = true
 	}
-	return params, nil
+	return params, metadata.Pairs("errors", "none"), nil
 }
