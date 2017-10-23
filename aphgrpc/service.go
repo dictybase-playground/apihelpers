@@ -5,6 +5,11 @@ import (
 	"strings"
 )
 
+const (
+	DefaultPagenum  = 1
+	DefaultPagesize = 10
+)
+
 // JSONAPIAllowedParams interface should be implement by all grpc-gateway services
 // that supports JSON API specifications.
 type JSONAPIAllowedParams interface {

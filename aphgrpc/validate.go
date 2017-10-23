@@ -167,3 +167,10 @@ func ValidateAndParseGetParams(jsapi JSONAPIAllowedParams, r *jsonapi.GetRequest
 	}
 	return params, metadata.Pairs("errors", "none"), nil
 }
+
+func HasPagination(r *jsonapi.ListRequest) bool {
+	if r.Pagenum != 0 && r.Pagesize != 0 {
+		return true
+	}
+	return false
+}
