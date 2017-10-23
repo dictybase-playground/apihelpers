@@ -12,6 +12,8 @@ type JSONAPIAllowedParams interface {
 	AllowedInclude() []string
 	// Attribute fields that are allowed
 	AllowedFields() []string
+	// Filter fields that are allowed
+	AllowedFilter() []string
 }
 
 // JSONAPIResource interface provides information about HTTP resource. All
