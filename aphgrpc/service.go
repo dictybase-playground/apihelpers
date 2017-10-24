@@ -11,15 +11,17 @@ const (
 	DefaultPagesize = 10
 )
 
-// JSONAPIAllowedParams interface should be implement by all grpc-gateway services
+// JSONAPIParamsInfo interface should be implement by all grpc-gateway services
 // that supports JSON API specifications.
-type JSONAPIAllowedParams interface {
+type JSONAPIParamsInfo interface {
 	// Relationships that could be included
 	AllowedInclude() []string
 	// Attribute fields that are allowed
 	AllowedFields() []string
 	// Filter fields that are allowed
 	AllowedFilter() []string
+	// FilterToColumns provides mapping between filter and storage columns
+	FilterToColumns() map[string]string
 }
 
 // JSONAPIResource interface provides information about HTTP resource. All
