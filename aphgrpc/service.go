@@ -33,20 +33,25 @@ type JSONAPIResource interface {
 	GetPathPrefix() string
 }
 
-// GetPaginatedLinks generates links with pagination for collection resources
-func GetPaginatedLinks(rs JSONAPIResource, total, pagenum, pagesize int64) map[string]string {
+// GetTotalPageNum calculate total no of pages from total no. records and page size
+func GetTotalPageNum(record, pagesize int64) int64 {
+	total := int64(math.Floor(float64(record) / float64(pagesize)))
+	if math.Mod(float64(record), float64(pagesize)) > 0 {
+		total += 1
+	}
+	return total
+}
+
+// GetPaginatedLinks gets paginated links and total page number for collection resources
+func GetPaginatedLinks(rs JSONAPIResource, lastpage, pagenum, pagesize int64) map[string]string {
 	var links map[string]string
 	links["self"] = GenPaginatedResourceLink(rs, pagenum, pagesize)
 	links["first"] = GenPaginatedResourceLink(rs, 1, pagesize)
 	if pagenum != 1 {
 		links["previous"] = GenPaginatedResourceLink(rs, pagenum-1, pagesize)
 	}
-	lastPage := int(math.Floor(float64(total) / float64(pagesize)))
-	if math.Mod(float64(total), float64(pagesize)) > 0 {
-		lastPage += 1
-	}
-	links["last"] = GenPaginatedResourceLink(rs, lastPage, pagesize)
-	if pagenum != lastPage {
+	links["last"] = GenPaginatedResourceLink(rs, lastpage, pagesize)
+	if pagenum != lastpage {
 		links["next"] = GenPaginatedResourceLink(rs, pagenum+1, pagesize)
 	}
 	return links
