@@ -2,6 +2,7 @@ package aphgrpc
 
 import (
 	"fmt"
+	"math"
 	"strings"
 )
 
@@ -32,6 +33,25 @@ type JSONAPIResource interface {
 	GetPathPrefix() string
 }
 
+// GetPaginatedLinks generates links with pagination for collection resources
+func GetPaginatedLinks(rs JSONAPIResource, total, pagenum, pagesize int64) map[string]string {
+	var links map[string]string
+	links["self"] = GenPaginatedResourceLink(rs, pagenum, pagesize)
+	links["first"] = GenPaginatedResourceLink(rs, 1, pagesize)
+	if pagenum != 1 {
+		links["previous"] = GenPaginatedResourceLink(rs, pagenum-1, pagesize)
+	}
+	lastPage := int(math.Floor(float64(total) / float64(pagesize)))
+	if math.Mod(float64(total), float64(pagesize)) > 0 {
+		lastPage += 1
+	}
+	links["last"] = GenPaginatedResourceLink(rs, lastPage, pagesize)
+	if pagenum != lastPage {
+		links["next"] = GenPaginatedResourceLink(rs, pagenum+1, pagesize)
+	}
+	return links
+}
+
 func GenBaseLink(rs JSONAPIResource) string {
 	return fmt.Sprintf(
 		"%s/%s",
@@ -57,8 +77,14 @@ func GenMultiResourceLink(rs JSONAPIResource) string {
 	)
 }
 
-func GenPaginatedResourceLink(rs JSONAPIResource) string {
-	return ""
+func GenPaginatedResourceLink(rs JSONAPIResource, pagenum, pagesize int64) string {
+	return fmt.Sprintf(
+		"%s/%s?pagenum=%d&pagesize=%d",
+		GenBaseLink(rs),
+		rs.GetResourceName(),
+		pagenum,
+		pagesize,
+	)
 }
 
 func GenSelfRelationshipLink(rs JSONAPIResource, rel string, id int64) string {
