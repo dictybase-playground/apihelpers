@@ -1,6 +1,7 @@
 package aphgrpc
 
 import (
+	"bytes"
 	"fmt"
 	"regexp"
 	"strings"
@@ -40,6 +41,52 @@ type APIFilter struct {
 	Logic string
 }
 
+// FilterToBindValue generates a postgresql compatible query expression from
+// the given filters
+func FilterToBindValue(filter []*APIFilter) []string {
+	values := make([]string, len(filters))
+	for i, f := range filters {
+		expr := f.Expression
+		if strings.Contains(f.Operator, "@") {
+			expr = fmt.Sprintf(".*%s.*", expr)
+		}
+		values[i] = expr
+	}
+	return values
+}
+
+// FilterToWhereClause generates a postgresql compatible where clause from the
+// provided filters
+func FilterToWhereClause(s JSONAPIParamsInfo, filters []*APIFilter) string {
+	lmap := map[string]string{",": "OR", ";": "AND"}
+	fmap := s.FilterToColumns()
+	omap := getOperatorMap()
+	var clause bytes.Buffer
+	for i, f := range filters {
+		clause.WriteString(
+			fmt.Sprintf(
+				"%s %s $%d",
+				fmap[f.Attribute],
+				omap[f.Operator],
+				i+1,
+			),
+		)
+		if len(f.Logic) != 0 {
+			clause.WriteString(fmt.Sprintf(" %s", lmap[f.Logic]))
+		}
+	}
+	return clause.String()
+}
+
+func getOperatorMap() map[string]string {
+	return map[string]string{
+		"==": "==",
+		"!=": "!=",
+		"=@": "SIMILAR TO",
+		"!@": "NOT SIMILAR TO",
+	}
+}
+
 func hasInclude(r *jsonapi.GetRequest) bool {
 	if len(r.Include) > 0 {
 		return true
@@ -76,7 +123,7 @@ func hasFilter(r *jsonapi.ListRequest) bool {
 }
 
 // ValidateAndParseListParams validate and parse the JSON API include, fields, filter parameters
-func ValidateAndParseListParams(jsapi JSONAPIAllowedParams, r *jsonapi.ListRequest) (*JSONAPIParams, metadata.MD, error) {
+func ValidateAndParseListParams(jsapi JSONAPIParamsInfo, r *jsonapi.ListRequest) (*JSONAPIParams, metadata.MD, error) {
 	params := &JSONAPIParams{
 		HasFields:   false,
 		HasIncludes: false,
@@ -121,7 +168,9 @@ func ValidateAndParseListParams(jsapi JSONAPIAllowedParams, r *jsonapi.ListReque
 					Attribute:  n[1],
 					Operator:   n[2],
 					Expression: n[3],
-					Logic:      n[4],
+				}
+				if len(n) == 5 {
+					f.Logic = n[4]
 				}
 				filters = append(filters, f)
 			}
@@ -134,7 +183,7 @@ func ValidateAndParseListParams(jsapi JSONAPIAllowedParams, r *jsonapi.ListReque
 
 // ValidateAndParseGetParams validate and parse the JSON API include and fields parameters
 // that are used for singular resources
-func ValidateAndParseGetParams(jsapi JSONAPIAllowedParams, r *jsonapi.GetRequest) (*JSONAPIParams, metadata.MD, error) {
+func ValidateAndParseGetParams(jsapi JSONAPIParamsInfo, r *jsonapi.GetRequest) (*JSONAPIParams, metadata.MD, error) {
 	params := &JSONAPIParams{}
 	if hasInclude(r) {
 		if strings.Contains(r.Include, ",") {
