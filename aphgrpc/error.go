@@ -8,10 +8,12 @@ import (
 	"strconv"
 
 	context "golang.org/x/net/context"
+	dat "gopkg.in/mgutz/dat.v1"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/manyminds/api2go"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -105,4 +107,13 @@ func fallbackError(w http.ResponseWriter, s *status.Status) {
 	if encErr != nil {
 		http.Error(w, encErr.Error(), http.StatusInternalServerError)
 	}
+}
+
+func handleError(ctx context.Context, err error) error {
+	if err == dat.ErrNotFound {
+		grpc.SetTrailer(ctx, ErrNotFound)
+		return status.Error(codes.NotFound, err.Error())
+	}
+	grpc.SetTrailer(ctx, ErrDatabaseQuery)
+	return status.Error(codes.Internal, err.Error())
 }

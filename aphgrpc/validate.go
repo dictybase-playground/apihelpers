@@ -22,11 +22,11 @@ type JSONAPIParams struct {
 	// check for presence of fields parameters
 	HasFields bool
 	// check for presence of include parameters
-	HasIncludes bool
+	HasInclude bool
 	// check for presence of filter parameters
 	HasFilter bool
 	// slice of filters
-	Filter []*APIFilter
+	Filters []*APIFilter
 }
 
 // APIFilter is a container for filter parameters
@@ -61,7 +61,7 @@ func FilterToWhereClause(s JSONAPIParamsInfo, filters []*APIFilter) string {
 	lmap := map[string]string{",": "OR", ";": "AND"}
 	fmap := s.FilterToColumns()
 	omap := getOperatorMap()
-	var clause bytes.Buffer
+	clause := bytes.NewBufferString("WHERE ")
 	for i, f := range filters {
 		clause.WriteString(
 			fmt.Sprintf(
