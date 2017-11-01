@@ -22,6 +22,8 @@ type JSONAPIParamsInfo interface {
 	AllowedFilter() []string
 	// FilterToColumns provides mapping between filter and storage columns
 	FilterToColumns() map[string]string
+	// RequiredAttrs are the mandatory attributes for creating a new resource
+	RequiredAttrs() []string
 }
 
 // JSONAPIResource interface provides information about HTTP resource. All
