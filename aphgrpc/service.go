@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math"
 	"strings"
+
+	"github.com/fatih/structs"
 )
 
 const (
@@ -114,4 +116,17 @@ func GenRelatedRelationshipLink(rs JSONAPIResource, rel string, id int64) string
 		id,
 		rel,
 	)
+}
+
+//GetDefinedTags check for fields that are initialized and returns a slice of
+//their matching tag values
+func GetDefinedTags(i interface{}, tag string) []string {
+	var v []string
+	s := structs.New(i)
+	for _, f := range s.Fields() {
+		if !f.IsZero() {
+			v = append(v, f.Tag(tag))
+		}
+	}
+	return v
 }
