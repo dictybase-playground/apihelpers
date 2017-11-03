@@ -3,9 +3,13 @@ package aphgrpc
 import (
 	"fmt"
 	"math"
+	"net/http"
 	"strings"
 
 	"github.com/fatih/structs"
+	"github.com/golang/protobuf/proto"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	context "golang.org/x/net/context"
 )
 
 const (
@@ -129,4 +133,20 @@ func GetDefinedTags(i interface{}, tag string) []string {
 		}
 	}
 	return v
+}
+
+// HandleCreateResponse modifies the grpc gateway filter which adds the JSON API header and
+// modifies the http status response for POST request
+func HandleCreateResponse(ctx context.Context, w http.ResponseWriter, resp proto.Message) error {
+	w.Header().Set("Content-Type", "application/vnd.api+json")
+	md, ok := runtime.ServerMetadataFromContext(ctx)
+	if ok {
+		trMD := md.TrailerMD
+		if _, ok := trMD["method"]; ok {
+			if trMD["method"][0] == "POST" {
+				w.WriteHeader(http.StatusCreated)
+			}
+		}
+	}
+	return nil
 }
