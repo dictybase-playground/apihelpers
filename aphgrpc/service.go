@@ -122,6 +122,19 @@ func GenRelatedRelationshipLink(rs JSONAPIResource, rel string, id int64) string
 	)
 }
 
+//GetDefinedTagsWithValue check for fields that are initialized and returns a map
+//with the tag and their values
+func GetDefinedTagsWithValue(i interface{}, key string) map[string]interface{} {
+	m := make(map[string]interface{})
+	s := structs.New(i)
+	for _, f := range s.Fields() {
+		if !f.IsZero() {
+			m[f.Tag(key)] = f.Value()
+		}
+	}
+	return m
+}
+
 //GetDefinedTags check for fields that are initialized and returns a slice of
 //their matching tag values
 func GetDefinedTags(i interface{}, tag string) []string {
