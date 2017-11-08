@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 
+	"gopkg.in/mgutz/dat.v1/sqlx-runner"
+
 	"github.com/fatih/structs"
 	"github.com/golang/protobuf/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -162,4 +164,72 @@ func HandleCreateResponse(ctx context.Context, w http.ResponseWriter, resp proto
 		}
 	}
 	return nil
+}
+
+type Service struct {
+	Dbh             *runner.DB
+	pathPrefix      string
+	include         []string
+	includeStr      string
+	fieldsToColumns map[string]string
+	fieldsStr       string
+	resource        string
+	baseURL         string
+	filterToColumns map[string]string
+	filterStr       string
+	params          *JSONAPIParams
+	listMethod      bool
+	requiredAttrs   []string
+}
+
+func (s *Service) RequiredAttrs() []string {
+	return s.requiredAttrs
+}
+
+func (s *Service) IsListMethod() bool {
+	return s.listMethod
+}
+
+func (s *Service) FilterToColumns() map[string]string {
+	return s.filterToColumns
+}
+
+func (s *Service) AllowedFilter() []string {
+	var f []string
+	for k, _ := range s.filterToColumns {
+		f = append(f, k)
+	}
+	return f
+}
+
+func (s *Service) AllowedInclude() []string {
+	return s.include
+}
+
+func (s *Service) AllowedFields() []string {
+	var f []string
+	for k, _ := range s.fieldsToColumns {
+		f = append(f, k)
+	}
+	return f
+}
+
+func (s *Service) GetResourceName() string {
+	return s.resource
+}
+
+func (s *Service) GetBaseURL() string {
+	return s.baseURL
+}
+
+func (s *Service) GetPathPrefix() string {
+	return s.pathPrefix
+}
+
+func (s *Service) MapFieldsToColumns(fields []string) []string {
+	var columns []string
+	for _, v := range fields {
+		columns = append(columns, s.fieldsToColumns[v])
+	}
+	return columns
 }
