@@ -31,6 +31,8 @@ var (
 	ErrDatabaseInsert = newError("Database insert error")
 	//ErrDatabaseUpdate represents database update related errors
 	ErrDatabaseUpdate = newError("Database update error")
+	//ErrDatabaseDelete represents database update delete errors
+	ErrDatabaseDelete = newError("Database delete error")
 	//ErrNotFound represents the absence of an HTTP resource
 	ErrNotFound = newError("Resource not found")
 	//ErrJSONEncoding represents any json encoding error
