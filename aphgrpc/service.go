@@ -8,6 +8,8 @@ import (
 
 	"gopkg.in/mgutz/dat.v1/sqlx-runner"
 
+	"github.com/dictyBase/apihelpers/aphgrpc"
+	"github.com/dictyBase/go-genproto/dictybaseapis/api/jsonapi"
 	"github.com/fatih/structs"
 	"github.com/golang/protobuf/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -72,8 +74,8 @@ func GetPaginatedLinks(rs JSONAPIResource, lastpage, pagenum, pagesize int64) ma
 func GenBaseLink(rs JSONAPIResource) string {
 	return fmt.Sprintf(
 		"%s/%s",
-		strings.Trim(sinfo.GetBaseURL(), "/"),
-		strings.Trim(sinfo.GetPrefix(), "/"),
+		strings.Trim(rs.GetBaseURL(), "/"),
+		strings.Trim(rs.GetPathPrefix(), "/"),
 	)
 }
 
@@ -232,4 +234,66 @@ func (s *Service) MapFieldsToColumns(fields []string) []string {
 		columns = append(columns, s.fieldsToColumns[v])
 	}
 	return columns
+}
+
+func (s *Service) getCount(table string) (int64, error) {
+	var count int64
+	err := s.Dbh.Select("COUNT(*)").From(table).QueryScalar(&count)
+	return count, err
+}
+
+func (s *Service) getAllFilteredCount(table string) (int64, error) {
+	var count int64
+	err := s.Dbh.Select("COUNT(*)").
+		From(table).
+		Scope(
+			aphgrpc.FilterToWhereClause(s, s.params.Filter),
+			aphgrpc.FilterToBindValue(s.params.Filter)...,
+		).QueryScalar(&count)
+	return count, err
+}
+
+func (s *Service) getPagination(record, pagenum, pagesize int64) (*jsonapi.PaginationLinks, int64) {
+	pages := GetTotalPageNum(record, pagenum, pagesize)
+	pageLinks := GetPaginatedLinks(s, pages, pagenum, pagesize)
+	pageType := []string{"self", "last", "first", "previous", "next"}
+	params := s.params
+	switch {
+	case params.HasFields && params.HasInclude && params.HasFilter:
+		for _, v := range pageType {
+			if _, ok := pageLinks[v]; ok {
+				pageLinks[v] += fmt.Sprintf("%s&fields=%s&include=%s&filter=%s", s.fieldsStr, s.includeStr, s.filterStr)
+			}
+		}
+	case params.HasFields && params.HasInclude:
+		for _, v := range pageType {
+			if _, ok := pageLinks[v]; ok {
+				pageLinks[v] += fmt.Sprintf("%s&fields=%s&include=%s", s.fieldsStr, s.includeStr)
+			}
+		}
+	case params.HasFields && params.HasFilter:
+		for _, v := range pageType {
+			if _, ok := pageLinks[v]; ok {
+				pageLinks[v] += fmt.Sprintf("%s&fields=%s&filter=%s", s.fieldsStr, s.filterStr)
+			}
+		}
+	case params.HasInclude && params.HasFilter:
+		for _, v := range pageType {
+			if _, ok := pageLinks[v]; ok {
+				pageLinks[v] += fmt.Sprintf("%s&include=%s&filter=%s", s.includeStr, s.filterStr)
+			}
+		}
+	}
+	jsapiLinks := jsonapi.PaginationLinks{
+		Self:  pageLinks["self"],
+		Last:  pageLinks["last"],
+		First: pageLinks["first"],
+	}
+	if _, ok := pageLinks["previous"]; ok {
+		jsapiLinks.Previous = pageLinks["previous"]
+	}
+	if _, ok := pageLinks["next"]; ok {
+		jsapiLinks.Next = pageLinks["next"]
+	}
+	return jsapiLinks, pages
 }

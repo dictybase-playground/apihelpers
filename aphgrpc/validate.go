@@ -43,7 +43,7 @@ type APIFilter struct {
 
 // FilterToBindValue generates a postgresql compatible query expression from
 // the given filters
-func FilterToBindValue(filter []*APIFilter) []string {
+func FilterToBindValue(filters []*APIFilter) []string {
 	values := make([]string, len(filters))
 	for i, f := range filters {
 		expr := f.Expression
@@ -125,9 +125,9 @@ func hasFilter(r *jsonapi.ListRequest) bool {
 // ValidateAndParseListParams validate and parse the JSON API include, fields, filter parameters
 func ValidateAndParseListParams(jsapi JSONAPIParamsInfo, r *jsonapi.ListRequest) (*JSONAPIParams, metadata.MD, error) {
 	params := &JSONAPIParams{
-		HasFields:   false,
-		HasIncludes: false,
-		HasFilter:   false,
+		HasFields:  false,
+		HasInclude: false,
+		HasFilter:  false,
 	}
 	if hasListInclude(r) {
 		if strings.Contains(r.Include, ",") {
@@ -140,7 +140,7 @@ func ValidateAndParseListParams(jsapi JSONAPIParamsInfo, r *jsonapi.ListRequest)
 				return params, ErrIncludeParam, fmt.Errorf("include %s relationship is not allowed", v)
 			}
 		}
-		params.HasIncludes = true
+		params.HasInclude = true
 	}
 
 	if hasListFields(r) {
@@ -156,8 +156,8 @@ func ValidateAndParseListParams(jsapi JSONAPIParamsInfo, r *jsonapi.ListRequest)
 		}
 		params.HasFields = true
 	}
-	if HasFilter(r) {
-		m := re.FindAllStringSubmatch(r.Filter)
+	if hasFilter(r) {
+		m := re.FindAllStringSubmatch(r.Filter, -1)
 		if len(m) > 0 {
 			var filters []*APIFilter
 			for _, n := range m {
@@ -175,7 +175,7 @@ func ValidateAndParseListParams(jsapi JSONAPIParamsInfo, r *jsonapi.ListRequest)
 				filters = append(filters, f)
 			}
 			params.HasFilter = true
-			params.Filter = filters
+			params.Filters = filters
 		}
 	}
 	return params, metadata.Pairs("errors", "none"), nil
@@ -197,7 +197,7 @@ func ValidateAndParseGetParams(jsapi JSONAPIParamsInfo, r *jsonapi.GetRequest) (
 			}
 		}
 	} else {
-		params.HasIncludes = false
+		params.HasInclude = false
 	}
 
 	if hasFields(r) {
