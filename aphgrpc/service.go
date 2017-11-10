@@ -12,6 +12,8 @@ import (
 	"github.com/dictyBase/go-genproto/dictybaseapis/api/jsonapi"
 	"github.com/fatih/structs"
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	context "golang.org/x/net/context"
 )
@@ -166,6 +168,20 @@ func HandleCreateResponse(ctx context.Context, w http.ResponseWriter, resp proto
 		}
 	}
 	return nil
+}
+
+// ConvertAllToAny generates slice of arbitrary serialized protocol buffer
+// message
+func ConvertAllToAny(msg []proto.Message) ([]*any.Any, error) {
+	as := make([]*any.Any, len(msg))
+	for i, p := range msg {
+		pkg, err := ptypes.MarshalAny(p)
+		if err != nil {
+			return as, err
+		}
+		as[i] = pkg
+	}
+	return as, nil
 }
 
 type Service struct {
