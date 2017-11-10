@@ -303,13 +303,13 @@ func (s *Service) GenCollectionResSelfLink() string {
 	params := s.params
 	switch {
 	case params.HasFields && params.HasFilter && params.HasInclude:
-		link += fmt.Sprintf("%s&fields=%s&include=%s&filter=%s", s.fieldsStr, s.includeStr, s.filterStr)
+		link += fmt.Sprintf("?fields=%s&include=%s&filter=%s", s.fieldsStr, s.includeStr, s.filterStr)
 	case params.HasFields && params.HasFilter:
-		link += fmt.Sprintf("%s&fields=%s&filter=%s", s.fieldsStr, s.filterStr)
+		link += fmt.Sprintf("?fields=%s&filter=%s", s.fieldsStr, s.filterStr)
 	case params.HasFields && params.HasInclude:
-		link += fmt.Sprintf("%s&fields=%s&include=%s", s.fieldsStr, s.includeStr)
+		link += fmt.Sprintf("?fields=%s&include=%s", s.fieldsStr, s.includeStr)
 	case params.HasFilter && params.HasInclude:
-		link += fmt.Sprintf("%s&fiter=%s&include=%s", s.filterStr, s.includeStr)
+		link += fmt.Sprintf("?filter=%s&include=%s", s.filterStr, s.includeStr)
 	}
 	return link
 }
