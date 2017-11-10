@@ -297,3 +297,19 @@ func (s *Service) getPagination(record, pagenum, pagesize int64) (*jsonapi.Pagin
 	}
 	return jsapiLinks, pages
 }
+
+func (s *Service) genJSONAPISelfLink(id int64) string {
+	links := GenSingleResourceLink(s, id)
+	if !s.IsListMethod() && s.params != nil {
+		params := s.params
+		switch {
+		case params.HasFields && params.HasIncludes:
+			links += fmt.Sprintf("?fields=%s&include=%s", s.fieldsStr, s.includeStr)
+		case params.HasFields:
+			links += fmt.Sprintf("?fields=%s", s.fieldsStr)
+		case params.HasIncludes:
+			links += fmt.Sprintf("?include=%s", s.includeStr)
+		}
+	}
+	return links
+}
