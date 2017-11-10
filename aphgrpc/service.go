@@ -298,7 +298,23 @@ func (s *Service) getPagination(record, pagenum, pagesize int64) (*jsonapi.Pagin
 	return jsapiLinks, pages
 }
 
-func (s *Service) GenSelfLinkWithParams(id int64) string {
+func (s *Service) GenCollectionResSelfLink() string {
+	link := GenMultiResourceLink(s)
+	params := s.params
+	switch {
+	case params.HasFields && params.HasFilter && params.HasInclude:
+		link += fmt.Sprintf("%s&fields=%s&include=%s&filter=%s", s.fieldsStr, s.includeStr, s.filterStr)
+	case params.HasFields && params.HasFilter:
+		link += fmt.Sprintf("%s&fields=%s&filter=%s", s.fieldsStr, s.filterStr)
+	case params.HasFields && params.HasInclude:
+		link += fmt.Sprintf("%s&fields=%s&include=%s", s.fieldsStr, s.includeStr)
+	case params.HasFilter && params.HasInclude:
+		link += fmt.Sprintf("%s&fiter=%s&include=%s", s.filterStr, s.includeStr)
+	}
+	return link
+}
+
+func (s *Service) GenSingularResSelfLink(id int64) string {
 	links := GenSingleResourceLink(s, id)
 	if !s.IsListMethod() && s.params != nil {
 		params := s.params
