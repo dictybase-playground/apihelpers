@@ -278,25 +278,43 @@ func (s *Service) getPagination(record, pagenum, pagesize int64) (*jsonapi.Pagin
 	case params.HasFields && params.HasInclude && params.HasFilter:
 		for _, v := range pageType {
 			if _, ok := pageLinks[v]; ok {
-				pageLinks[v] += fmt.Sprintf("%s&fields=%s&include=%s&filter=%s", s.fieldsStr, s.includeStr, s.filterStr)
+				pageLinks[v] += fmt.Sprintf("&fields=%s&include=%s&filter=%s", s.fieldsStr, s.includeStr, s.filterStr)
 			}
 		}
 	case params.HasFields && params.HasInclude:
 		for _, v := range pageType {
 			if _, ok := pageLinks[v]; ok {
-				pageLinks[v] += fmt.Sprintf("%s&fields=%s&include=%s", s.fieldsStr, s.includeStr)
+				pageLinks[v] += fmt.Sprintf("&fields=%s&include=%s", s.fieldsStr, s.includeStr)
 			}
 		}
 	case params.HasFields && params.HasFilter:
 		for _, v := range pageType {
 			if _, ok := pageLinks[v]; ok {
-				pageLinks[v] += fmt.Sprintf("%s&fields=%s&filter=%s", s.fieldsStr, s.filterStr)
+				pageLinks[v] += fmt.Sprintf("&fields=%s&filter=%s", s.fieldsStr, s.filterStr)
 			}
 		}
 	case params.HasInclude && params.HasFilter:
 		for _, v := range pageType {
 			if _, ok := pageLinks[v]; ok {
-				pageLinks[v] += fmt.Sprintf("%s&include=%s&filter=%s", s.includeStr, s.filterStr)
+				pageLinks[v] += fmt.Sprintf("&include=%s&filter=%s", s.includeStr, s.filterStr)
+			}
+		}
+	case params.HasInclude:
+		for _, v := range pageType {
+			if _, ok := pageLinks[v]; ok {
+				pageLinks[v] += fmt.Sprintf("&include=%s", s.includeStr)
+			}
+		}
+	case params.HasFilter:
+		for _, v := range pageType {
+			if _, ok := pageLinks[v]; ok {
+				pageLinks[v] += fmt.Sprintf("&filter=%s", s.filterStr)
+			}
+		}
+	case params.HasFields:
+		for _, v := range pageType {
+			if _, ok := pageLinks[v]; ok {
+				pageLinks[v] += fmt.Sprintf("&fields=%s", s.fieldsStr)
 			}
 		}
 	}
@@ -326,6 +344,12 @@ func (s *Service) genCollResourceSelfLink() string {
 		link += fmt.Sprintf("?fields=%s&include=%s", s.fieldsStr, s.includeStr)
 	case params.HasFilter && params.HasInclude:
 		link += fmt.Sprintf("?filter=%s&include=%s", s.filterStr, s.includeStr)
+	case params.HasInclude:
+		link += fmt.Sprintf("?include=%s", s.includeStr)
+	case params.HasFilter:
+		link += fmt.Sprintf("?filter=%s", s.filterStr)
+	case params.HasFields:
+		link += fmt.Sprintf("?fields=%s", s.fieldsStr)
 	}
 	return link
 }
