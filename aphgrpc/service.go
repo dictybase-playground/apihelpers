@@ -162,8 +162,11 @@ func HandleCreateResponse(ctx context.Context, w http.ResponseWriter, resp proto
 	if ok {
 		trMD := md.TrailerMD
 		if _, ok := trMD["method"]; ok {
-			if trMD["method"][0] == "POST" {
+			switch trMD["method"][0] {
+			case "POST":
 				w.WriteHeader(http.StatusCreated)
+			case "POST_NO_CONTENT":
+				w.WriteHeader(http.StatusNoContent)
 			}
 		}
 	}
