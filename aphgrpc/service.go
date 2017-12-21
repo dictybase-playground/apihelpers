@@ -16,6 +16,7 @@ import (
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	context "golang.org/x/net/context"
+	"google.golang.org/grpc/metadata"
 )
 
 const (
@@ -245,6 +246,19 @@ func (s *Service) GetBaseURL() string {
 
 func (s *Service) GetPathPrefix() string {
 	return s.pathPrefix
+}
+
+func (s *Service) SetBaseURL(ctx context.Context) error {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return ErrRetrieveMetadata
+	}
+	slice, ok := md["x-forwarded-host"]
+	if !ok {
+		return ErrXForwardedHost
+	}
+	s.baseURL = slice[0]
+	return nil
 }
 
 func (s *Service) MapFieldsToColumns(fields []string) []string {
