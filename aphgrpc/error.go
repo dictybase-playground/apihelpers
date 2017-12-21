@@ -49,6 +49,10 @@ var (
 	ErrNotAcceptable = newError("Accept header is not acceptable")
 	//ErrUnsupportedMedia represents any error with unsupported media type in http header
 	ErrUnsupportedMedia = newError("Media type is not supported")
+	//ErrRetrieveMetadata represents any error to retrieve grpc metadata from the running context
+	ErrRetrieveMetadata = errors.New("unable to retrieve metadata")
+	//ErrXForwardedHost represents any failure or absence of x-forwarded-host HTTP header in the grpc context
+	ErrXForwardedHost = errors.New("x-forwarded-host header is absent")
 )
 
 func newErrorWithParam(msg, param string) metadata.MD {
@@ -116,10 +120,18 @@ func fallbackError(w http.ResponseWriter, s *status.Status) {
 }
 
 func handleError(ctx context.Context, err error) error {
-	if err == dat.ErrNotFound {
+	switch err {
+	case dat.ErrNotFound:
 		grpc.SetTrailer(ctx, ErrNotFound)
 		return status.Error(codes.NotFound, err.Error())
+	case ErrRetrieveMetadata:
+		grpc.SetTrailer(ctx, newError(err.Error()))
+		return status.Error(codes.Internal, err.Error())
+	case ErrXForwardedHost:
+		grpc.SetTrailer(ctx, newError(err.Error()))
+		return status.Error(codes.Internal, err.Error())
+	default:
+		grpc.SetTrailer(ctx, ErrDatabaseQuery)
+		return status.Error(codes.Internal, err.Error())
 	}
-	grpc.SetTrailer(ctx, ErrDatabaseQuery)
-	return status.Error(codes.Internal, err.Error())
 }
