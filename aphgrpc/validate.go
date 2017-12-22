@@ -43,8 +43,8 @@ type APIFilter struct {
 
 // FilterToBindValue generates a postgresql compatible query expression from
 // the given filters
-func FilterToBindValue(filters []*APIFilter) []string {
-	values := make([]string, len(filters))
+func FilterToBindValue(filters []*APIFilter) []interface{} {
+	values := make([]interface{}, len(filters))
 	for i, f := range filters {
 		expr := f.Expression
 		if strings.Contains(f.Operator, "@") {

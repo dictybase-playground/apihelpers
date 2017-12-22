@@ -8,7 +8,6 @@ import (
 
 	"gopkg.in/mgutz/dat.v1/sqlx-runner"
 
-	"github.com/dictyBase/apihelpers/aphgrpc"
 	"github.com/dictyBase/go-genproto/dictybaseapis/api/jsonapi"
 	"github.com/fatih/structs"
 	"github.com/golang/protobuf/proto"
@@ -280,14 +279,14 @@ func (s *Service) getAllFilteredCount(table string) (int64, error) {
 	err := s.Dbh.Select("COUNT(*)").
 		From(table).
 		Scope(
-			aphgrpc.FilterToWhereClause(s, s.params.Filter),
-			aphgrpc.FilterToBindValue(s.params.Filter)...,
+			FilterToWhereClause(s, s.params.Filters),
+			FilterToBindValue(s.params.Filters)...,
 		).QueryScalar(&count)
 	return count, err
 }
 
 func (s *Service) getPagination(record, pagenum, pagesize int64) (*jsonapi.PaginationLinks, int64) {
-	pages := GetTotalPageNum(record, pagenum, pagesize)
+	pages := GetTotalPageNum(record, pagesize)
 	pageLinks := GetPaginatedLinks(s, pages, pagenum, pagesize)
 	pageType := []string{"self", "last", "first", "previous", "next"}
 	params := s.params
@@ -335,13 +334,13 @@ func (s *Service) getPagination(record, pagenum, pagesize int64) (*jsonapi.Pagin
 			}
 		}
 	}
-	jsapiLinks := jsonapi.PaginationLinks{
+	jsapiLinks := &jsonapi.PaginationLinks{
 		Self:  pageLinks["self"],
 		Last:  pageLinks["last"],
 		First: pageLinks["first"],
 	}
 	if _, ok := pageLinks["previous"]; ok {
-		jsapiLinks.Previous = pageLinks["previous"]
+		jsapiLinks.Prev = pageLinks["previous"]
 	}
 	if _, ok := pageLinks["next"]; ok {
 		jsapiLinks.Next = pageLinks["next"]
@@ -376,11 +375,11 @@ func (s *Service) genResourceSelfLink(id int64) string {
 	if !s.IsListMethod() && s.params != nil {
 		params := s.params
 		switch {
-		case params.HasFields && params.HasIncludes:
+		case params.HasFields && params.HasInclude:
 			links += fmt.Sprintf("?fields=%s&include=%s", s.fieldsStr, s.includeStr)
 		case params.HasFields:
 			links += fmt.Sprintf("?fields=%s", s.fieldsStr)
-		case params.HasIncludes:
+		case params.HasInclude:
 			links += fmt.Sprintf("?include=%s", s.includeStr)
 		}
 	}
