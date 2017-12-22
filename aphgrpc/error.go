@@ -119,7 +119,7 @@ func fallbackError(w http.ResponseWriter, s *status.Status) {
 	}
 }
 
-func handleError(ctx context.Context, err error) error {
+func HandleError(ctx context.Context, err error) error {
 	switch err {
 	case dat.ErrNotFound:
 		grpc.SetTrailer(ctx, ErrNotFound)
