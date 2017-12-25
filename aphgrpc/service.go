@@ -189,62 +189,62 @@ func ConvertAllToAny(msg []proto.Message) ([]*any.Any, error) {
 
 type Service struct {
 	Dbh             *runner.DB
-	pathPrefix      string
-	include         []string
-	includeStr      string
-	fieldsToColumns map[string]string
-	fieldsStr       string
-	resource        string
-	baseURL         string
-	filterToColumns map[string]string
-	filterStr       string
-	params          *JSONAPIParams
-	listMethod      bool
-	requiredAttrs   []string
+	PathPrefix      string
+	Include         []string
+	IncludeStr      string
+	FieldsToColumns map[string]string
+	FieldsStr       string
+	Resource        string
+	BaseURL         string
+	FilToColumns    map[string]string
+	FilterStr       string
+	Params          *JSONAPIParams
+	ListMethod      bool
+	ReqAttrs        []string
 }
 
 func (s *Service) RequiredAttrs() []string {
-	return s.requiredAttrs
+	return s.ReqAttrs
 }
 
 func (s *Service) IsListMethod() bool {
-	return s.listMethod
+	return s.ListMethod
 }
 
 func (s *Service) FilterToColumns() map[string]string {
-	return s.filterToColumns
+	return s.FilToColumns
 }
 
 func (s *Service) AllowedFilter() []string {
 	var f []string
-	for k, _ := range s.filterToColumns {
+	for k, _ := range s.FilterToColumns() {
 		f = append(f, k)
 	}
 	return f
 }
 
 func (s *Service) AllowedInclude() []string {
-	return s.include
+	return s.Include
 }
 
 func (s *Service) AllowedFields() []string {
 	var f []string
-	for k, _ := range s.fieldsToColumns {
+	for k, _ := range s.FieldsToColumns {
 		f = append(f, k)
 	}
 	return f
 }
 
 func (s *Service) GetResourceName() string {
-	return s.resource
+	return s.Resource
 }
 
 func (s *Service) GetBaseURL() string {
-	return s.baseURL
+	return s.BaseURL
 }
 
 func (s *Service) GetPathPrefix() string {
-	return s.pathPrefix
+	return s.PathPrefix
 }
 
 func (s *Service) SetBaseURL(ctx context.Context) error {
@@ -256,14 +256,14 @@ func (s *Service) SetBaseURL(ctx context.Context) error {
 	if !ok {
 		return ErrXForwardedHost
 	}
-	s.baseURL = slice[0]
+	s.BaseURL = slice[0]
 	return nil
 }
 
 func (s *Service) MapFieldsToColumns(fields []string) []string {
 	var columns []string
 	for _, v := range fields {
-		columns = append(columns, s.fieldsToColumns[v])
+		columns = append(columns, s.FieldsToColumns[v])
 	}
 	return columns
 }
@@ -279,8 +279,8 @@ func (s *Service) getAllFilteredCount(table string) (int64, error) {
 	err := s.Dbh.Select("COUNT(*)").
 		From(table).
 		Scope(
-			FilterToWhereClause(s, s.params.Filters),
-			FilterToBindValue(s.params.Filters)...,
+			FilterToWhereClause(s, s.Params.Filters),
+			FilterToBindValue(s.Params.Filters)...,
 		).QueryScalar(&count)
 	return count, err
 }
@@ -289,48 +289,48 @@ func (s *Service) getPagination(record, pagenum, pagesize int64) (*jsonapi.Pagin
 	pages := GetTotalPageNum(record, pagesize)
 	pageLinks := GetPaginatedLinks(s, pages, pagenum, pagesize)
 	pageType := []string{"self", "last", "first", "previous", "next"}
-	params := s.params
+	params := s.Params
 	switch {
 	case params.HasFields && params.HasInclude && params.HasFilter:
 		for _, v := range pageType {
 			if _, ok := pageLinks[v]; ok {
-				pageLinks[v] += fmt.Sprintf("&fields=%s&include=%s&filter=%s", s.fieldsStr, s.includeStr, s.filterStr)
+				pageLinks[v] += fmt.Sprintf("&fields=%s&include=%s&filter=%s", s.FieldsStr, s.IncludeStr, s.FilterStr)
 			}
 		}
 	case params.HasFields && params.HasInclude:
 		for _, v := range pageType {
 			if _, ok := pageLinks[v]; ok {
-				pageLinks[v] += fmt.Sprintf("&fields=%s&include=%s", s.fieldsStr, s.includeStr)
+				pageLinks[v] += fmt.Sprintf("&fields=%s&include=%s", s.FieldsStr, s.IncludeStr)
 			}
 		}
 	case params.HasFields && params.HasFilter:
 		for _, v := range pageType {
 			if _, ok := pageLinks[v]; ok {
-				pageLinks[v] += fmt.Sprintf("&fields=%s&filter=%s", s.fieldsStr, s.filterStr)
+				pageLinks[v] += fmt.Sprintf("&fields=%s&filter=%s", s.FieldsStr, s.FilterStr)
 			}
 		}
 	case params.HasInclude && params.HasFilter:
 		for _, v := range pageType {
 			if _, ok := pageLinks[v]; ok {
-				pageLinks[v] += fmt.Sprintf("&include=%s&filter=%s", s.includeStr, s.filterStr)
+				pageLinks[v] += fmt.Sprintf("&include=%s&filter=%s", s.IncludeStr, s.FilterStr)
 			}
 		}
 	case params.HasInclude:
 		for _, v := range pageType {
 			if _, ok := pageLinks[v]; ok {
-				pageLinks[v] += fmt.Sprintf("&include=%s", s.includeStr)
+				pageLinks[v] += fmt.Sprintf("&include=%s", s.IncludeStr)
 			}
 		}
 	case params.HasFilter:
 		for _, v := range pageType {
 			if _, ok := pageLinks[v]; ok {
-				pageLinks[v] += fmt.Sprintf("&filter=%s", s.filterStr)
+				pageLinks[v] += fmt.Sprintf("&filter=%s", s.FilterStr)
 			}
 		}
 	case params.HasFields:
 		for _, v := range pageType {
 			if _, ok := pageLinks[v]; ok {
-				pageLinks[v] += fmt.Sprintf("&fields=%s", s.fieldsStr)
+				pageLinks[v] += fmt.Sprintf("&fields=%s", s.FieldsStr)
 			}
 		}
 	}
@@ -350,37 +350,37 @@ func (s *Service) getPagination(record, pagenum, pagesize int64) (*jsonapi.Pagin
 
 func (s *Service) genCollResourceSelfLink() string {
 	link := GenMultiResourceLink(s)
-	params := s.params
+	params := s.Params
 	switch {
 	case params.HasFields && params.HasFilter && params.HasInclude:
-		link += fmt.Sprintf("?fields=%s&include=%s&filter=%s", s.fieldsStr, s.includeStr, s.filterStr)
+		link += fmt.Sprintf("?fields=%s&include=%s&filter=%s", s.FieldsStr, s.IncludeStr, s.FilterStr)
 	case params.HasFields && params.HasFilter:
-		link += fmt.Sprintf("?fields=%s&filter=%s", s.fieldsStr, s.filterStr)
+		link += fmt.Sprintf("?fields=%s&filter=%s", s.FieldsStr, s.FilterStr)
 	case params.HasFields && params.HasInclude:
-		link += fmt.Sprintf("?fields=%s&include=%s", s.fieldsStr, s.includeStr)
+		link += fmt.Sprintf("?fields=%s&include=%s", s.FieldsStr, s.IncludeStr)
 	case params.HasFilter && params.HasInclude:
-		link += fmt.Sprintf("?filter=%s&include=%s", s.filterStr, s.includeStr)
+		link += fmt.Sprintf("?filter=%s&include=%s", s.FilterStr, s.IncludeStr)
 	case params.HasInclude:
-		link += fmt.Sprintf("?include=%s", s.includeStr)
+		link += fmt.Sprintf("?include=%s", s.IncludeStr)
 	case params.HasFilter:
-		link += fmt.Sprintf("?filter=%s", s.filterStr)
+		link += fmt.Sprintf("?filter=%s", s.FilterStr)
 	case params.HasFields:
-		link += fmt.Sprintf("?fields=%s", s.fieldsStr)
+		link += fmt.Sprintf("?fields=%s", s.FieldsStr)
 	}
 	return link
 }
 
 func (s *Service) genResourceSelfLink(id int64) string {
 	links := GenSingleResourceLink(s, id)
-	if !s.IsListMethod() && s.params != nil {
-		params := s.params
+	if !s.IsListMethod() && s.Params != nil {
+		params := s.Params
 		switch {
 		case params.HasFields && params.HasInclude:
-			links += fmt.Sprintf("?fields=%s&include=%s", s.fieldsStr, s.includeStr)
+			links += fmt.Sprintf("?fields=%s&include=%s", s.FieldsStr, s.IncludeStr)
 		case params.HasFields:
-			links += fmt.Sprintf("?fields=%s", s.fieldsStr)
+			links += fmt.Sprintf("?fields=%s", s.FieldsStr)
 		case params.HasInclude:
-			links += fmt.Sprintf("?include=%s", s.includeStr)
+			links += fmt.Sprintf("?include=%s", s.IncludeStr)
 		}
 	}
 	return links
