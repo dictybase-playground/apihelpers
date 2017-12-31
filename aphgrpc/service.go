@@ -5,6 +5,7 @@ import (
 	"math"
 	"net/http"
 	"strings"
+	"time"
 
 	"gopkg.in/mgutz/dat.v1"
 	"gopkg.in/mgutz/dat.v1/sqlx-runner"
@@ -48,6 +49,14 @@ type JSONAPIResource interface {
 	GetBaseURL() string
 	// GetPrefix returns the path that could be appended to base url
 	GetPathPrefix() string
+}
+
+func NullToTime(t dat.NullTime) time.Time {
+	if t.Valid {
+		return t.Time
+	}
+	var nt time.Time
+	return nt
 }
 
 func NullToString(s dat.NullString) string {
