@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"gopkg.in/mgutz/dat.v1"
 	"gopkg.in/mgutz/dat.v1/sqlx-runner"
 
 	"github.com/dictyBase/go-genproto/dictybaseapis/api/jsonapi"
@@ -47,6 +48,13 @@ type JSONAPIResource interface {
 	GetBaseURL() string
 	// GetPrefix returns the path that could be appended to base url
 	GetPathPrefix() string
+}
+
+func NullToString(s dat.NullString) string {
+	if s.Valid {
+		return s.String
+	}
+	return ""
 }
 
 // GetTotalPageNum calculate total no of pages from total no. records and page size
