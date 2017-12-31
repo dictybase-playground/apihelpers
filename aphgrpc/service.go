@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	DefaultPagenum  = 1
-	DefaultPagesize = 10
+	DefaultPagenum  int64 = 1
+	DefaultPagesize int64 = 10
 )
 
 // JSONAPIParamsInfo interface should be implement by all grpc-gateway services
@@ -268,13 +268,13 @@ func (s *Service) MapFieldsToColumns(fields []string) []string {
 	return columns
 }
 
-func (s *Service) getCount(table string) (int64, error) {
+func (s *Service) GetCount(table string) (int64, error) {
 	var count int64
 	err := s.Dbh.Select("COUNT(*)").From(table).QueryScalar(&count)
 	return count, err
 }
 
-func (s *Service) getAllFilteredCount(table string) (int64, error) {
+func (s *Service) GetAllFilteredCount(table string) (int64, error) {
 	var count int64
 	err := s.Dbh.Select("COUNT(*)").
 		From(table).
@@ -285,7 +285,7 @@ func (s *Service) getAllFilteredCount(table string) (int64, error) {
 	return count, err
 }
 
-func (s *Service) getPagination(record, pagenum, pagesize int64) (*jsonapi.PaginationLinks, int64) {
+func (s *Service) GetPagination(record, pagenum, pagesize int64) (*jsonapi.PaginationLinks, int64) {
 	pages := GetTotalPageNum(record, pagesize)
 	pageLinks := GetPaginatedLinks(s, pages, pagenum, pagesize)
 	pageType := []string{"self", "last", "first", "previous", "next"}
@@ -348,7 +348,7 @@ func (s *Service) getPagination(record, pagenum, pagesize int64) (*jsonapi.Pagin
 	return jsapiLinks, pages
 }
 
-func (s *Service) genCollResourceSelfLink() string {
+func (s *Service) GenCollResourceSelfLink() string {
 	link := GenMultiResourceLink(s)
 	params := s.Params
 	switch {
@@ -370,7 +370,7 @@ func (s *Service) genCollResourceSelfLink() string {
 	return link
 }
 
-func (s *Service) genResourceSelfLink(id int64) string {
+func (s *Service) GenResourceSelfLink(id int64) string {
 	links := GenSingleResourceLink(s, id)
 	if !s.IsListMethod() && s.Params != nil {
 		params := s.Params
