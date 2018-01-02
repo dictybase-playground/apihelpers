@@ -5,7 +5,6 @@ import (
 	"math"
 	"net/http"
 	"strings"
-	"time"
 
 	"gopkg.in/mgutz/dat.v1"
 	"gopkg.in/mgutz/dat.v1/sqlx-runner"
@@ -15,6 +14,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
@@ -51,12 +51,13 @@ type JSONAPIResource interface {
 	GetPathPrefix() string
 }
 
-func NullToTime(t dat.NullTime) time.Time {
-	if t.Valid {
-		return t.Time
+func NullToTime(nt dat.NullTime) *timestamp.Timestamp {
+	var ts *timestamp.Timestamp
+	if nt.Valid {
+		ts, _ := ptypes.TimestampProto(nt.Time)
+		return ts
 	}
-	var nt time.Time
-	return nt
+	return ts
 }
 
 func NullToString(s dat.NullString) string {
