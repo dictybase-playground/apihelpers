@@ -5,6 +5,7 @@ import (
 	"math"
 	"net/http"
 	"strings"
+	"time"
 
 	"gopkg.in/mgutz/dat.v1"
 	"gopkg.in/mgutz/dat.v1/sqlx-runner"
@@ -58,6 +59,11 @@ func NullToTime(nt dat.NullTime) *timestamp.Timestamp {
 		return ts
 	}
 	return ts
+}
+
+func ProtoTimeStamp(ts *timestamp.Timestamp) time.Time {
+	t, _ := ptypes.Timestamp(ts)
+	return t
 }
 
 func NullToString(s dat.NullString) string {
