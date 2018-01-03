@@ -14,7 +14,6 @@ import (
 	"github.com/fatih/structs"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	context "golang.org/x/net/context"
@@ -71,6 +70,14 @@ func NullToString(s dat.NullString) string {
 		return s.String
 	}
 	return ""
+}
+
+func NullToInt64(i dat.NullInt64) int64 {
+	if i.Valid {
+		return i.Int64
+	}
+	var i64 int64
+	return i64
 }
 
 // GetTotalPageNum calculate total no of pages from total no. records and page size
@@ -195,20 +202,6 @@ func HandleCreateResponse(ctx context.Context, w http.ResponseWriter, resp proto
 		}
 	}
 	return nil
-}
-
-// ConvertAllToAny generates slice of arbitrary serialized protocol buffer
-// message
-func ConvertAllToAny(msg []proto.Message) ([]*any.Any, error) {
-	as := make([]*any.Any, len(msg))
-	for i, p := range msg {
-		pkg, err := ptypes.MarshalAny(p)
-		if err != nil {
-			return as, err
-		}
-		as[i] = pkg
-	}
-	return as, nil
 }
 
 type Service struct {
