@@ -87,41 +87,6 @@ func getOperatorMap() map[string]string {
 	}
 }
 
-func hasInclude(r *jsonapi.GetRequest) bool {
-	if len(r.Include) > 0 {
-		return true
-	}
-	return false
-}
-
-func hasFields(r *jsonapi.GetRequest) bool {
-	if len(r.Fields) > 0 {
-		return true
-	}
-	return false
-}
-
-func hasListInclude(r *jsonapi.ListRequest) bool {
-	if len(r.Include) > 0 {
-		return true
-	}
-	return false
-}
-
-func hasListFields(r *jsonapi.ListRequest) bool {
-	if len(r.Fields) > 0 {
-		return true
-	}
-	return false
-}
-
-func hasFilter(r *jsonapi.ListRequest) bool {
-	if len(r.Filter) > 0 {
-		return true
-	}
-	return false
-}
-
 // ValidateAndParseSimpleListParams validate and parse the JSON API include, fields, filter parameters
 func ValidateAndParseSimpleListParams(jsapi JSONAPIParamsInfo, r *jsonapi.SimpleListRequest) (*JSONAPIParams, metadata.MD, error) {
 	params := &JSONAPIParams{
@@ -129,7 +94,7 @@ func ValidateAndParseSimpleListParams(jsapi JSONAPIParamsInfo, r *jsonapi.Simple
 		HasInclude: false,
 		HasFilter:  false,
 	}
-	if hasListInclude(r) {
+	if len(r.Include) != 0 {
 		if strings.Contains(r.Include, ",") {
 			params.Includes = strings.Split(r.Include, ",")
 		} else {
@@ -143,7 +108,7 @@ func ValidateAndParseSimpleListParams(jsapi JSONAPIParamsInfo, r *jsonapi.Simple
 		params.HasInclude = true
 	}
 
-	if hasListFields(r) {
+	if len(r.Fields) != 0 {
 		if strings.Contains(r.Fields, ",") {
 			params.Fields = strings.Split(r.Fields, ",")
 		} else {
@@ -156,7 +121,7 @@ func ValidateAndParseSimpleListParams(jsapi JSONAPIParamsInfo, r *jsonapi.Simple
 		}
 		params.HasFields = true
 	}
-	if hasFilter(r) {
+	if len(r.Filter) != 0 {
 		m := re.FindAllStringSubmatch(r.Filter, -1)
 		if len(m) > 0 {
 			var filters []*APIFilter
@@ -188,7 +153,7 @@ func ValidateAndParseListParams(jsapi JSONAPIParamsInfo, r *jsonapi.ListRequest)
 		HasInclude: false,
 		HasFilter:  false,
 	}
-	if hasListInclude(r) {
+	if len(r.Include) != 0 {
 		if strings.Contains(r.Include, ",") {
 			params.Includes = strings.Split(r.Include, ",")
 		} else {
@@ -202,7 +167,7 @@ func ValidateAndParseListParams(jsapi JSONAPIParamsInfo, r *jsonapi.ListRequest)
 		params.HasInclude = true
 	}
 
-	if hasListFields(r) {
+	if len(r.Fields) != 0 {
 		if strings.Contains(r.Fields, ",") {
 			params.Fields = strings.Split(r.Fields, ",")
 		} else {
@@ -215,7 +180,7 @@ func ValidateAndParseListParams(jsapi JSONAPIParamsInfo, r *jsonapi.ListRequest)
 		}
 		params.HasFields = true
 	}
-	if hasFilter(r) {
+	if len(r.Filter) != 0 {
 		m := re.FindAllStringSubmatch(r.Filter, -1)
 		if len(m) > 0 {
 			var filters []*APIFilter
@@ -244,7 +209,7 @@ func ValidateAndParseListParams(jsapi JSONAPIParamsInfo, r *jsonapi.ListRequest)
 // that are used for singular resources
 func ValidateAndParseGetParams(jsapi JSONAPIParamsInfo, r *jsonapi.GetRequest) (*JSONAPIParams, metadata.MD, error) {
 	params := &JSONAPIParams{}
-	if hasInclude(r) {
+	if len(r.Include) != 0 {
 		if strings.Contains(r.Include, ",") {
 			params.Includes = strings.Split(r.Include, ",")
 		} else {
@@ -259,7 +224,7 @@ func ValidateAndParseGetParams(jsapi JSONAPIParamsInfo, r *jsonapi.GetRequest) (
 		params.HasInclude = false
 	}
 
-	if hasFields(r) {
+	if len(r.Fields) != 0 {
 		if strings.Contains(r.Fields, ",") {
 			params.Fields = strings.Split(r.Fields, ",")
 		} else {
