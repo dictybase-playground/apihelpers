@@ -122,6 +122,65 @@ func hasFilter(r *jsonapi.ListRequest) bool {
 	return false
 }
 
+// ValidateAndParseSimpleListParams validate and parse the JSON API include, fields, filter parameters
+func ValidateAndParseSimpleListParams(jsapi JSONAPIParamsInfo, r *jsonapi.SimpleListRequest) (*JSONAPIParams, metadata.MD, error) {
+	params := &JSONAPIParams{
+		HasFields:  false,
+		HasInclude: false,
+		HasFilter:  false,
+	}
+	if hasListInclude(r) {
+		if strings.Contains(r.Include, ",") {
+			params.Includes = strings.Split(r.Include, ",")
+		} else {
+			params.Includes = []string{r.Include}
+		}
+		for _, v := range params.Includes {
+			if !aphcollection.Contains(jsapi.AllowedInclude(), v) {
+				return params, ErrIncludeParam, fmt.Errorf("include %s relationship is not allowed", v)
+			}
+		}
+		params.HasInclude = true
+	}
+
+	if hasListFields(r) {
+		if strings.Contains(r.Fields, ",") {
+			params.Fields = strings.Split(r.Fields, ",")
+		} else {
+			params.Fields = []string{r.Fields}
+		}
+		for _, v := range params.Fields {
+			if !aphcollection.Contains(jsapi.AllowedFields(), v) {
+				return params, ErrFields, fmt.Errorf("%s fields attribute is not allowed", v)
+			}
+		}
+		params.HasFields = true
+	}
+	if hasFilter(r) {
+		m := re.FindAllStringSubmatch(r.Filter, -1)
+		if len(m) > 0 {
+			var filters []*APIFilter
+			for _, n := range m {
+				if !aphcollection.Contains(jsapi.AllowedFilter(), n[1]) {
+					return params, ErrFilterParam, fmt.Errorf("%s filter attribute is not allowed", n[1])
+				}
+				f := &APIFilter{
+					Attribute:  n[1],
+					Operator:   n[2],
+					Expression: n[3],
+				}
+				if len(n) == 5 {
+					f.Logic = n[4]
+				}
+				filters = append(filters, f)
+			}
+			params.HasFilter = true
+			params.Filters = filters
+		}
+	}
+	return params, metadata.Pairs("errors", "none"), nil
+}
+
 // ValidateAndParseListParams validate and parse the JSON API include, fields, filter parameters
 func ValidateAndParseListParams(jsapi JSONAPIParamsInfo, r *jsonapi.ListRequest) (*JSONAPIParams, metadata.MD, error) {
 	params := &JSONAPIParams{
