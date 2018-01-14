@@ -65,6 +65,11 @@ func ProtoTimeStamp(ts *timestamp.Timestamp) time.Time {
 	return t
 }
 
+func TimestampProto(t time.Time) *timestamp.Timestamp {
+	ts, _ := ptypes.TimestampProto(t)
+	return ts
+}
+
 func NullToString(s dat.NullString) string {
 	if s.Valid {
 		return s.String
