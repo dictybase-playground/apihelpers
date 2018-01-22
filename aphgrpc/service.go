@@ -379,6 +379,15 @@ func (s *Service) GetPagination(record, pagenum, pagesize int64) (*jsonapi.Pagin
 	return jsapiLinks, pages
 }
 
+func (s *Service) GenCollResourceRelSelfLink(id int64, relation string) string {
+	return fmt.Sprintf(
+		"%s/%d/%s",
+		GenMultiResourceLink(s),
+		id,
+		relation,
+	)
+}
+
 func (s *Service) GenCollResourceSelfLink() string {
 	link := GenMultiResourceLink(s)
 	if s.Params == nil {
