@@ -247,3 +247,10 @@ func HasPagination(r *jsonapi.ListRequest) bool {
 	}
 	return false
 }
+
+func HasRelatedPagination(r *jsonapi.RelationshipRequestWithPagination) bool {
+	if r.Pagenum != 0 && r.Pagesize != 0 {
+		return true
+	}
+	return false
+}
