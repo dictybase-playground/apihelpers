@@ -307,9 +307,18 @@ func (s *Service) GetAllFilteredCount(table string) (int64, error) {
 	return count, err
 }
 
+// GetPagination generates JSONAPI pagination link along with fields, include and filter query parameters
 func (s *Service) GetPagination(record, pagenum, pagesize int64) (*jsonapi.PaginationLinks, int64) {
 	pages := GetTotalPageNum(record, pagesize)
 	pageLinks := GetPaginatedLinks(s, pages, pagenum, pagesize)
+	if s.Params == nil {
+		return &jsonapi.PaginationLinks{
+			Self:  pageLinks["self"],
+			Last:  pageLinks["last"],
+			First: pageLinks["first"],
+		}, pages
+
+	}
 	pageType := []string{"self", "last", "first", "previous", "next"}
 	params := s.Params
 	switch {
@@ -372,6 +381,9 @@ func (s *Service) GetPagination(record, pagenum, pagesize int64) (*jsonapi.Pagin
 
 func (s *Service) GenCollResourceSelfLink() string {
 	link := GenMultiResourceLink(s)
+	if s.Params == nil {
+		return link
+	}
 	params := s.Params
 	switch {
 	case params.HasFields && params.HasFilter && params.HasInclude:
