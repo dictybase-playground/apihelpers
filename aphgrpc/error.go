@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	context "golang.org/x/net/context"
 	dat "gopkg.in/mgutz/dat.v1"
@@ -56,7 +57,7 @@ var (
 )
 
 func newErrorWithParam(msg, param string) metadata.MD {
-	return metadata.Pairs(MetaKey, msg, param)
+	return metadata.Pairs(MetaKey, msg, MetaKey, param)
 }
 
 func newError(msg string) metadata.MD {
@@ -87,7 +88,7 @@ func JSONAPIError(w http.ResponseWriter, md metadata.MD, s *status.Status) {
 	status := runtime.HTTPStatusFromCode(s.Code())
 	jsnErr := api2go.Error{
 		Status: strconv.Itoa(status),
-		Title:  md["error"][0],
+		Title:  strings.Join(md["error"], "-"),
 		Detail: s.Message(),
 		Meta: map[string]interface{}{
 			"creator": "api error helper",
