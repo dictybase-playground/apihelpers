@@ -94,17 +94,18 @@ func GetTotalPageNum(record, pagesize int64) int64 {
 	return total
 }
 
-// GetPaginatedLinks gets paginated links and total page number for collection resources
-func GetPaginatedLinks(rs JSONAPIResource, lastpage, pagenum, pagesize int64) map[string]string {
+// GenPaginatedLinks generates paginated resource links
+// from various page properties.
+func GenPaginatedLinks(url string, lastpage, pagenum, pagesize int64) map[string]string {
 	var links map[string]string
-	links["self"] = GenPaginatedResourceLink(rs, pagenum, pagesize)
-	links["first"] = GenPaginatedResourceLink(rs, 1, pagesize)
+	links["self"] = AppendPaginationParams(url, pagenum, pagesize)
+	links["first"] = AppendPaginationParams(url, 1, pagesize)
 	if pagenum != 1 {
-		links["previous"] = GenPaginatedResourceLink(rs, pagenum-1, pagesize)
+		links["previous"] = AppendPaginationParams(url, pagenum-1, pagesize)
 	}
-	links["last"] = GenPaginatedResourceLink(rs, lastpage, pagesize)
+	links["last"] = AppendPaginationParams(url, lastpage, pagesize)
 	if pagenum != lastpage {
-		links["next"] = GenPaginatedResourceLink(rs, pagenum+1, pagesize)
+		links["next"] = AppendPaginationParams(url, pagenum+1, pagesize)
 	}
 	return links
 }
@@ -132,6 +133,10 @@ func GenMultiResourceLink(rs JSONAPIResource) string {
 		GenBaseLink(rs),
 		rs.GetResourceName(),
 	)
+}
+
+func AppendPaginationParams(url string, pagenum, pagesize int64) string {
+	return fmt.Sprintf("%s?pagenum=%d&pagesize=%d", url, pagenum, pagesize)
 }
 
 func GenPaginatedResourceLink(rs JSONAPIResource, pagenum, pagesize int64) string {
@@ -307,61 +312,76 @@ func (s *Service) GetAllFilteredCount(table string) (int64, error) {
 	return count, err
 }
 
-// GetPagination generates JSONAPI pagination link along with fields, include and filter query parameters
+// GetRelatedPagination generates JSONAPI pagination links for relation resources
+func (s *Service) GetRelatedPagination(id, record, pagenum, pagesize int64, relation string) (*jsonapi.Pagination, int64) {
+	pages := GetTotalPageNum(record, pagesize)
+	baseLink := s.GenCollResourceRelSelfLink(id, relation)
+	pageLinks := GenPaginatedLinks(baseLink, pages, pagenum, pagesize)
+	jsapiLinks := &jsonapi.PaginationLinks{
+		Self:  pageLinks["self"],
+		Last:  pageLinks["last"],
+		First: pageLinks["first"],
+	}
+	if _, ok := pageLinks["previous"]; ok {
+		jsapiLinks.Prev = pageLinks["previous"]
+	}
+	if _, ok := pageLinks["next"]; ok {
+		jsapiLinks.Next = pageLinks["next"]
+	}
+	return jsapiLinks, pages
+}
+
+// GetPagination generates JSONAPI pagination links along with fields, include and filter query parameters
 func (s *Service) GetPagination(record, pagenum, pagesize int64) (*jsonapi.PaginationLinks, int64) {
 	pages := GetTotalPageNum(record, pagesize)
-	pageLinks := GetPaginatedLinks(s, pages, pagenum, pagesize)
-	if s.Params == nil {
-		return &jsonapi.PaginationLinks{
-			Self:  pageLinks["self"],
-			Last:  pageLinks["last"],
-			First: pageLinks["first"],
-		}, pages
-
-	}
+	baseLink := s.GenCollResourceSelfLink()
+	pageLinks := GenPaginatedLinks(baseLink, pages, pagenum, pagesize)
 	pageType := []string{"self", "last", "first", "previous", "next"}
-	params := s.Params
-	switch {
-	case params.HasFields && params.HasInclude && params.HasFilter:
-		for _, v := range pageType {
-			if _, ok := pageLinks[v]; ok {
-				pageLinks[v] += fmt.Sprintf("&fields=%s&include=%s&filter=%s", s.FieldsStr, s.IncludeStr, s.FilterStr)
+
+	if !s.Params {
+		params := s.Params
+		switch {
+		case params.HasFields && params.HasInclude && params.HasFilter:
+			for _, v := range pageType {
+				if _, ok := pageLinks[v]; ok {
+					pageLinks[v] += fmt.Sprintf("&fields=%s&include=%s&filter=%s", s.FieldsStr, s.IncludeStr, s.FilterStr)
+				}
 			}
-		}
-	case params.HasFields && params.HasInclude:
-		for _, v := range pageType {
-			if _, ok := pageLinks[v]; ok {
-				pageLinks[v] += fmt.Sprintf("&fields=%s&include=%s", s.FieldsStr, s.IncludeStr)
+		case params.HasFields && params.HasInclude:
+			for _, v := range pageType {
+				if _, ok := pageLinks[v]; ok {
+					pageLinks[v] += fmt.Sprintf("&fields=%s&include=%s", s.FieldsStr, s.IncludeStr)
+				}
 			}
-		}
-	case params.HasFields && params.HasFilter:
-		for _, v := range pageType {
-			if _, ok := pageLinks[v]; ok {
-				pageLinks[v] += fmt.Sprintf("&fields=%s&filter=%s", s.FieldsStr, s.FilterStr)
+		case params.HasFields && params.HasFilter:
+			for _, v := range pageType {
+				if _, ok := pageLinks[v]; ok {
+					pageLinks[v] += fmt.Sprintf("&fields=%s&filter=%s", s.FieldsStr, s.FilterStr)
+				}
 			}
-		}
-	case params.HasInclude && params.HasFilter:
-		for _, v := range pageType {
-			if _, ok := pageLinks[v]; ok {
-				pageLinks[v] += fmt.Sprintf("&include=%s&filter=%s", s.IncludeStr, s.FilterStr)
+		case params.HasInclude && params.HasFilter:
+			for _, v := range pageType {
+				if _, ok := pageLinks[v]; ok {
+					pageLinks[v] += fmt.Sprintf("&include=%s&filter=%s", s.IncludeStr, s.FilterStr)
+				}
 			}
-		}
-	case params.HasInclude:
-		for _, v := range pageType {
-			if _, ok := pageLinks[v]; ok {
-				pageLinks[v] += fmt.Sprintf("&include=%s", s.IncludeStr)
+		case params.HasInclude:
+			for _, v := range pageType {
+				if _, ok := pageLinks[v]; ok {
+					pageLinks[v] += fmt.Sprintf("&include=%s", s.IncludeStr)
+				}
 			}
-		}
-	case params.HasFilter:
-		for _, v := range pageType {
-			if _, ok := pageLinks[v]; ok {
-				pageLinks[v] += fmt.Sprintf("&filter=%s", s.FilterStr)
+		case params.HasFilter:
+			for _, v := range pageType {
+				if _, ok := pageLinks[v]; ok {
+					pageLinks[v] += fmt.Sprintf("&filter=%s", s.FilterStr)
+				}
 			}
-		}
-	case params.HasFields:
-		for _, v := range pageType {
-			if _, ok := pageLinks[v]; ok {
-				pageLinks[v] += fmt.Sprintf("&fields=%s", s.FieldsStr)
+		case params.HasFields:
+			for _, v := range pageType {
+				if _, ok := pageLinks[v]; ok {
+					pageLinks[v] += fmt.Sprintf("&fields=%s", s.FieldsStr)
+				}
 			}
 		}
 	}
