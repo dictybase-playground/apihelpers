@@ -313,7 +313,7 @@ func (s *Service) GetAllFilteredCount(table string) (int64, error) {
 }
 
 // GetRelatedPagination generates JSONAPI pagination links for relation resources
-func (s *Service) GetRelatedPagination(id, record, pagenum, pagesize int64, relation string) (*jsonapi.Pagination, int64) {
+func (s *Service) GetRelatedPagination(id, record, pagenum, pagesize int64, relation string) (*jsonapi.PaginationLinks, int64) {
 	pages := GetTotalPageNum(record, pagesize)
 	baseLink := s.GenCollResourceRelSelfLink(id, relation)
 	pageLinks := GenPaginatedLinks(baseLink, pages, pagenum, pagesize)
@@ -338,7 +338,7 @@ func (s *Service) GetPagination(record, pagenum, pagesize int64) (*jsonapi.Pagin
 	pageLinks := GenPaginatedLinks(baseLink, pages, pagenum, pagesize)
 	pageType := []string{"self", "last", "first", "previous", "next"}
 
-	if !s.Params {
+	if s.Params != nil {
 		params := s.Params
 		switch {
 		case params.HasFields && params.HasInclude && params.HasFilter:
