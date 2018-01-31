@@ -120,9 +120,8 @@ func GenBaseLink(rs JSONAPIResource) string {
 
 func GenSingleResourceLink(rs JSONAPIResource, id int64) string {
 	return fmt.Sprintf(
-		"%s/%s/%d",
+		"%s/%d",
 		GenBaseLink(rs),
-		rs.GetResourceName(),
 		id,
 	)
 }
