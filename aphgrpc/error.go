@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	context "golang.org/x/net/context"
-	dat "gopkg.in/mgutz/dat.v1"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/pkg/errors"
@@ -164,7 +163,7 @@ func fallbackError(w http.ResponseWriter, s *status.Status) {
 
 func HandleError(ctx context.Context, err error) error {
 	switch err {
-	case dat.ErrNotFound:
+	case strings.Contains(err.Error(), "no rows"):
 		grpc.SetTrailer(ctx, ErrNotFound)
 		return status.Error(codes.NotFound, err.Error())
 	case ErrRetrieveMetadata:
