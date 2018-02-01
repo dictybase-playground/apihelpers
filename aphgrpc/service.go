@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/mgutz/dat.v1"
-	"gopkg.in/mgutz/dat.v1/sqlx-runner"
+	"gopkg.in/mgutz/dat.v2/dat"
+	"gopkg.in/mgutz/dat.v2/sqlx-runner"
 
 	"github.com/dictyBase/go-genproto/dictybaseapis/api/jsonapi"
 	"github.com/fatih/structs"
