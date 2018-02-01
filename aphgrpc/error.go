@@ -161,9 +161,16 @@ func fallbackError(w http.ResponseWriter, s *status.Status) {
 	}
 }
 
+func CheckNoRows(err error) error {
+	if strings.Contains(err.Error(), "no rows") {
+		return errors.New("no rows")
+	}
+	return nil
+}
+
 func HandleError(ctx context.Context, err error) error {
 	switch err {
-	case strings.Contains(err.Error(), "no rows"):
+	case CheckNoRows(err):
 		grpc.SetTrailer(ctx, ErrNotFound)
 		return status.Error(codes.NotFound, err.Error())
 	case ErrRetrieveMetadata:
