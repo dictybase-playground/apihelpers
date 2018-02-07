@@ -13,7 +13,7 @@ import (
 
 var (
 	//HTTPError represents generic http errors
-	HTTPError = errors.NewClass("HTTP Error", errors.NoCaptureStack())
+	Errhttp = errors.NewClass("HTTP Error", errors.NoCaptureStack())
 	//ErrReqContext represents error in extracting context value from http request
 	ErrReqContext = newErrorClass("Unable to retrieve context", http.StatusInternalServerError)
 	//ErrOuthExchange represents error in exchanging code for token with oauth server
@@ -101,7 +101,7 @@ func newErrorClassWithPointer(msg, pointer string, code int) *errors.ErrorClass 
 }
 
 func newErrorClass(msg string, code int) *errors.ErrorClass {
-	err := HTTPError.NewClass(
+	err := Errhttp.NewClass(
 		http.StatusText(code),
 		errhttp.SetStatusCode(code),
 	)
