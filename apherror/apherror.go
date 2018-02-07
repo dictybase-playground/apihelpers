@@ -28,6 +28,8 @@ var (
 	ErrJSONEncoding = newErrorClass("Json encoding error", http.StatusInternalServerError)
 	//ErrStructMarshal represents any error with marshalling structure
 	ErrStructMarshal = newErrorClass("Structure marshalling error", http.StatusInternalServerError)
+	// ErrJWTToken represents errors with jwt token
+	ErrJWTToken = newErrorClass("Issue with jwt token", http.StatusInternalServerError)
 	//ErrIncludeParam represents any error with invalid include query parameter
 	ErrIncludeParam = newErrorClassWithParam("Invalid include query parameter", "include", http.StatusBadRequest)
 	//ErrSparseFieldSets represents any error with invalid sparse fieldsets query parameter
