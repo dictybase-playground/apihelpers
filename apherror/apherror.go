@@ -17,6 +17,12 @@ import (
 var (
 	//HTTPError represents generic http errors
 	HTTPError = errors.NewClass("HTTP Error", errors.NoCaptureStack())
+	//ErrReqContext represents error in extracting context value from http request
+	ErrReqContext = newErrorClass("Unable to retrieve context", http.StatusInternalServerError)
+	//ErrOuthExchange represents error in exchanging code for token with oauth server
+	ErrOauthExchange = newErrorClass("Unable to exchange token for code", http.StatusInternalServerError)
+	//ErrUserRetrieval represents error in retrieving user information from oauth provider
+	ErrUserRetrieval = newErrorClass("Unable to retrieve user information", http.StatusInternalServerError)
 	//ErrDatabaseQuery represents database query related errors
 	ErrDatabaseQuery = newErrorClass("Database query error", http.StatusInternalServerError)
 	//ErrNotFound represents the absence of an HTTP resource
