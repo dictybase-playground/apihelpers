@@ -7,9 +7,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gocraft/dbr"
-
-	"github.com/manyminds/api2go"
 	"github.com/spacemonkeygo/errors"
 	"github.com/spacemonkeygo/errors/errhttp"
 )
@@ -48,6 +45,49 @@ var (
 	paramErrKey   = errors.GenSym()
 )
 
+// HTTPError is used for errors
+type HTTPError struct {
+	err    error
+	msg    string
+	status int
+	Errors []Error `json:"errors,omitempty"`
+}
+
+// Error can be used for all kind of application errors
+// e.g. you would use it to define form errors or any
+// other semantical application problems
+// for more information see http://jsonapi.org/format/#errors
+type Error struct {
+	ID     string       `json:"id,omitempty"`
+	Links  *ErrorLinks  `json:"links,omitempty"`
+	Status string       `json:"status,omitempty"`
+	Code   string       `json:"code,omitempty"`
+	Title  string       `json:"title,omitempty"`
+	Detail string       `json:"detail,omitempty"`
+	Source *ErrorSource `json:"source,omitempty"`
+	Meta   interface{}  `json:"meta,omitempty"`
+}
+
+// ErrorLinks is used to provide an About URL that leads to
+// further details about the particular occurrence of the problem.
+//
+// for more information see http://jsonapi.org/format/#error-objects
+type ErrorLinks struct {
+	About string `json:"about,omitempty"`
+}
+
+// ErrorSource is used to provide references to the source of an error.
+//
+// The Pointer is a JSON Pointer to the associated entity in the request
+// document.
+// The Paramter is a string indicating which query parameter caused the error.
+//
+// for more information see http://jsonapi.org/format/#error-objects
+type ErrorSource struct {
+	Pointer   string `json:"pointer,omitempty"`
+	Parameter string `json:"parameter,omitempty"`
+}
+
 func newErrorClassWithParam(msg, param string, code int) *errors.ErrorClass {
 	err := newErrorClass(msg, code)
 	err.MustAddData(paramErrKey, param)
@@ -73,7 +113,7 @@ func newErrorClass(msg string, code int) *errors.ErrorClass {
 func JSONAPIError(w http.ResponseWriter, err error) {
 	status := errhttp.GetStatusCode(err, http.StatusInternalServerError)
 	title, _ := errors.GetData(err, titleErrKey).(string)
-	jsnErr := api2go.Error{
+	jsnErr := Error{
 		Status: strconv.Itoa(status),
 		Title:  title,
 		Detail: errhttp.GetErrorBody(err),
@@ -81,7 +121,7 @@ func JSONAPIError(w http.ResponseWriter, err error) {
 			"creator": "api error helper",
 		},
 	}
-	errSource := new(api2go.ErrorSource)
+	errSource := new(ErrorSource)
 	pointer, ok := errors.GetData(err, pointerErrKey).(string)
 	if ok {
 		errSource.Pointer = pointer
@@ -93,7 +133,7 @@ func JSONAPIError(w http.ResponseWriter, err error) {
 	jsnErr.Source = errSource
 	w.Header().Set("Content-Type", "application/vnd.api+json")
 	w.WriteHeader(status)
-	encErr := json.NewEncoder(w).Encode(api2go.HTTPError{Errors: []api2go.Error{jsnErr}})
+	encErr := json.NewEncoder(w).Encode(HTTPError{Errors: []Error{jsnErr}})
 	if encErr != nil {
 		http.Error(w, encErr.Error(), http.StatusInternalServerError)
 	}
@@ -101,11 +141,11 @@ func JSONAPIError(w http.ResponseWriter, err error) {
 
 // DatabaseError is for generating JSONAPI formatted error for database related
 // errors
-func DatabaseError(w http.ResponseWriter, err error) {
-	if err == dbr.ErrNotFound {
-		JSONAPIError(w, ErrNotFound.New(err.Error()))
-		return
-	}
-	// possible database query error
-	JSONAPIError(w, ErrDatabaseQuery.New(err.Error()))
-}
+//func DatabaseError(w http.ResponseWriter, err error) {
+//if err == dbr.ErrNotFound {
+//JSONAPIError(w, ErrNotFound.New(err.Error()))
+//return
+//}
+//// possible database query error
+//JSONAPIError(w, ErrDatabaseQuery.New(err.Error()))
+//}
