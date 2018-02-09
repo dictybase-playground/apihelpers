@@ -282,7 +282,7 @@ func (s *Service) SetBaseURL(ctx context.Context) error {
 	if !ok {
 		return ErrXForwardedHost
 	}
-	s.BaseURL = slice[0]
+	s.BaseURL = fmt.Sprintf("http://%s", slice[0])
 	return nil
 }
 
