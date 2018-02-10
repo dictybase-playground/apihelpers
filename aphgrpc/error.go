@@ -169,18 +169,10 @@ func CheckNoRows(err error) bool {
 }
 
 func HandleError(ctx context.Context, err error) error {
-	switch err {
-	case CheckNoRows(err):
+	if CheckNoRows(err) {
 		grpc.SetTrailer(ctx, ErrNotFound)
 		return status.Error(codes.NotFound, err.Error())
-	case ErrRetrieveMetadata:
-		grpc.SetTrailer(ctx, newError(err.Error()))
-		return status.Error(codes.Internal, err.Error())
-	case ErrXForwardedHost:
-		grpc.SetTrailer(ctx, newError(err.Error()))
-		return status.Error(codes.Internal, err.Error())
-	default:
-		grpc.SetTrailer(ctx, ErrDatabaseQuery)
-		return status.Error(codes.Internal, err.Error())
 	}
+	grpc.SetTrailer(ctx, newError(err.Error()))
+	return status.Error(codes.Internal, err.Error())
 }
