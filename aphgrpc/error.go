@@ -161,11 +161,11 @@ func fallbackError(w http.ResponseWriter, s *status.Status) {
 	}
 }
 
-func CheckNoRows(err error) error {
+func CheckNoRows(err error) bool {
 	if strings.Contains(err.Error(), "no rows") {
-		return errors.New("no rows")
+		return true
 	}
-	return nil
+	return false
 }
 
 func HandleError(ctx context.Context, err error) error {
