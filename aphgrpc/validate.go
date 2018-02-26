@@ -208,7 +208,11 @@ func ValidateAndParseListParams(jsapi JSONAPIParamsInfo, r *jsonapi.ListRequest)
 // ValidateAndParseGetParams validate and parse the JSON API include and fields parameters
 // that are used for singular resources
 func ValidateAndParseGetParams(jsapi JSONAPIParamsInfo, r *jsonapi.GetRequest) (*JSONAPIParams, metadata.MD, error) {
-	params := &JSONAPIParams{}
+	params := &JSONAPIParams{
+		HasFields:  false,
+		HasInclude: false,
+		HasFilter:  false,
+	}
 	if len(r.Include) != 0 {
 		if strings.Contains(r.Include, ",") {
 			params.Includes = strings.Split(r.Include, ",")
@@ -220,10 +224,8 @@ func ValidateAndParseGetParams(jsapi JSONAPIParamsInfo, r *jsonapi.GetRequest) (
 				return params, ErrIncludeParam, fmt.Errorf("include %s relationship is not allowed", v)
 			}
 		}
-	} else {
-		params.HasInclude = false
+		params.HasInclude = true
 	}
-
 	if len(r.Fields) != 0 {
 		if strings.Contains(r.Fields, ",") {
 			params.Fields = strings.Split(r.Fields, ",")
@@ -235,8 +237,7 @@ func ValidateAndParseGetParams(jsapi JSONAPIParamsInfo, r *jsonapi.GetRequest) (
 				return params, ErrFilterParam, fmt.Errorf("%s value in fields is not allowed", v)
 			}
 		}
-	} else {
-		params.HasFields = false
+		params.HasFields = true
 	}
 	return params, metadata.Pairs("errors", "none"), nil
 }
