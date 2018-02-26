@@ -236,7 +236,7 @@ func ValidateAndParseGetParams(jsapi JSONAPIParamsInfo, r *jsonapi.GetRequest) (
 			}
 		}
 	} else {
-		params.HasFields = true
+		params.HasFields = false
 	}
 	return params, metadata.Pairs("errors", "none"), nil
 }
