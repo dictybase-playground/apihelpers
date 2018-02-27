@@ -80,7 +80,7 @@ func FilterToWhereClause(s JSONAPIParamsInfo, filters []*APIFilter) string {
 
 func getOperatorMap() map[string]string {
 	return map[string]string{
-		"==": "==",
+		"==": "=",
 		"!=": "!=",
 		"=@": "SIMILAR TO",
 		"!@": "NOT SIMILAR TO",
