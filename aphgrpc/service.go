@@ -127,11 +127,7 @@ func GenSingleResourceLink(rs JSONAPIResource, id int64) string {
 }
 
 func GenMultiResourceLink(rs JSONAPIResource) string {
-	return fmt.Sprintf(
-		"%s/%s",
-		GenBaseLink(rs),
-		rs.GetResourceName(),
-	)
+	return GenBaseLink(rs)
 }
 
 func AppendPaginationParams(url string, pagenum, pagesize int64) string {
