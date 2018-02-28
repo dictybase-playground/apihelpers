@@ -136,9 +136,8 @@ func AppendPaginationParams(url string, pagenum, pagesize int64) string {
 
 func GenPaginatedResourceLink(rs JSONAPIResource, pagenum, pagesize int64) string {
 	return fmt.Sprintf(
-		"%s/%s?pagenum=%d&pagesize=%d",
+		"%s?pagenum=%d&pagesize=%d",
 		GenBaseLink(rs),
-		rs.GetResourceName(),
 		pagenum,
 		pagesize,
 	)
@@ -146,9 +145,8 @@ func GenPaginatedResourceLink(rs JSONAPIResource, pagenum, pagesize int64) strin
 
 func GenSelfRelationshipLink(rs JSONAPIResource, rel string, id int64) string {
 	return fmt.Sprintf(
-		"%s/%s/%d/relationships/%s",
+		"%s/%d/relationships/%s",
 		GenBaseLink(rs),
-		rs.GetResourceName(),
 		id,
 		rel,
 	)
@@ -156,9 +154,8 @@ func GenSelfRelationshipLink(rs JSONAPIResource, rel string, id int64) string {
 
 func GenRelatedRelationshipLink(rs JSONAPIResource, rel string, id int64) string {
 	return fmt.Sprintf(
-		"%s/%s/%d/%s",
+		"%s/%d/%s",
 		GenBaseLink(rs),
-		rs.GetResourceName(),
 		id,
 		rel,
 	)
