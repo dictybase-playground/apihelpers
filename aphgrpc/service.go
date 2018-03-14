@@ -97,7 +97,7 @@ func GetTotalPageNum(record, pagesize int64) int64 {
 // GenPaginatedLinks generates paginated resource links
 // from various page properties.
 func GenPaginatedLinks(url string, lastpage, pagenum, pagesize int64) map[string]string {
-	var links map[string]string
+	links := make(map[string]string)
 	links["self"] = AppendPaginationParams(url, pagenum, pagesize)
 	links["first"] = AppendPaginationParams(url, 1, pagesize)
 	if pagenum != 1 {
