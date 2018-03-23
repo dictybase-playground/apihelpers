@@ -6,11 +6,11 @@ import (
 
 	"github.com/dictyBase/apihelpers/pubsub"
 	"github.com/golang/protobuf/proto"
-	"github.com/nats-io/go-nats"
+	gnats "github.com/nats-io/go-nats"
 )
 
 type natsReplyMessage struct {
-	msg *nats.Msg
+	msg *gnats.Msg
 	err error
 }
 
@@ -23,11 +23,11 @@ func (m *natsReplyMessage) Err() error {
 }
 
 type natsRequest struct {
-	conn *nats.Conn
+	conn *gnats.Conn
 }
 
-func NewRequest(url string, options ...nats.Option) (pubsub.Request, error) {
-	nc, err := nats.Connect(url, options...)
+func NewRequest(url string, options ...gnats.Option) (pubsub.Request, error) {
+	nc, err := gnats.Connect(url, options...)
 	if err != nil {
 		return &natsRequest{}, err
 	}

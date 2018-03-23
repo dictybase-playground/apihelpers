@@ -2,11 +2,11 @@ package nats
 
 import (
 	"github.com/dictyBase/apihelpers/pubsub"
-	"github.com/nats-io/go-nats"
+	gnats "github.com/nats-io/go-nats"
 )
 
 type natsMessage struct {
-	msg *nats.Msg
+	msg *gnats.Msg
 }
 
 func (m *natsMessage) Message() []byte {
@@ -21,27 +21,25 @@ func (m *natsMessage) Done() error {
 }
 
 type natsSubscriber struct {
-	conn         *nats.Conn
-	subscription string
-	err          error
-	output       chan pubsub.SubscriberMessage
+	conn   *gnats.Conn
+	err    error
+	output chan pubsub.SubscriberMessage
 }
 
-func NewSubscriber(url string, sub string) (pubsub.Subscriber, error) {
-	nc, err := nats.Connect(url)
+func NewSubscriber(url string, options ...gnats.Option) (pubsub.Subscriber, error) {
+	nc, err := gnats.Connect(url, options...)
 	if err != nil {
 		return &natsSubscriber{}, err
 	}
 	return &natsSubscriber{
-		conn:         nc,
-		subscription: sub,
-		output:       make(chan pubsub.SubscriberMessage),
+		conn:   nc,
+		output: make(chan pubsub.SubscriberMessage),
 	}, err
 }
 
-func (s *natsSubscriber) Start() <-chan pubsub.SubscriberMessage {
+func (s *natsSubscriber) Start(sub string) <-chan pubsub.SubscriberMessage {
 	nm := &natsMessage{}
-	_, err := s.conn.Subscribe(s.subscription, func(msg *nats.Msg) {
+	_, err := s.conn.Subscribe(sub, func(msg *gnats.Msg) {
 		nm.msg = msg
 		s.output <- nm
 	})

@@ -23,7 +23,7 @@ type Publisher interface {
 // what happened.
 type Subscriber interface {
 	// Start will return a channel of raw messages.
-	Start() <-chan SubscriberMessage
+	Start(string) <-chan SubscriberMessage
 	// Err will contain any errors returned from the consumer connection.
 	Err() error
 	// Stop will initiate a graceful shutdown of the subscriber connection.

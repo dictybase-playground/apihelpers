@@ -3,15 +3,15 @@ package nats
 import (
 	"github.com/dictyBase/apihelpers/pubsub"
 	"github.com/golang/protobuf/proto"
-	"github.com/nats-io/go-nats"
+	gnats "github.com/nats-io/go-nats"
 )
 
 type natsPublisher struct {
-	conn *nats.Conn
+	conn *gnats.Conn
 }
 
-func NewPublisher(url string, options ...nats.Option) (pubsub.Publisher, error) {
-	nc, err := nats.Connect(url, options...)
+func NewPublisher(url string, options ...gnats.Option) (pubsub.Publisher, error) {
+	nc, err := gnats.Connect(url, options...)
 	if err != nil {
 		return &natsPublisher{}, err
 	}
