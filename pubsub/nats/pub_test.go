@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/dictyBase/apihelpers/aphdocker"
 )
@@ -66,5 +67,33 @@ func TestSubscriber(t *testing.T) {
 	}
 	if err := s.Stop(); err != nil {
 		t.Fatalf("could not stop the subscription %s\n", err)
+	}
+}
+
+func TestReplyReq(t *testing.T) {
+	subj := "replytest"
+	req, err := NewRequest(connString)
+	if err != nil {
+		t.Fatalf("cannot connect to nats for request %s\n", err)
+	}
+	rep, err := NewReply(connString)
+	if err != nil {
+		t.Fatalf("cannot connect to nats for reply %s\n", err)
+	}
+	rdata := []byte("battery")
+	fn := func(b []byte) []byte { return b }
+	if err := rep.Start(fn, subj); err != nil {
+		t.Fatalf("could not start reply subscription %s\n", err)
+	}
+	timeout, _ := time.ParseDuration("28s")
+	msg := req.RawRequest(subj, rdata, timeout)
+	if err := msg.Err(); err != nil {
+		t.Fatalf("unable to get a reply %s\n", err)
+	}
+	if !bytes.Equal(rdata, msg.Message()) {
+		t.Fatalf("request %s does not match reply %s\n", string(rdata), string(msg.Message()))
+	}
+	if err := rep.Stop(); err != nil {
+		t.Fatalf("could not stop reply subscription\n", err)
 	}
 }
