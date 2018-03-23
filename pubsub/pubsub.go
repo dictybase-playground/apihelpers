@@ -66,7 +66,7 @@ type Reply interface {
 	Publish(string, []byte) error
 	// Start will start the subscription, get the reply message
 	// through ReplyFn and then reply message through Publish
-	Start(ReplyFn) error
+	Start(ReplyFn, string) error
 	// Stop will initiate a graceful shutdown of the subscriber connection.
 	Stop() error
 }
