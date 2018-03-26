@@ -271,11 +271,9 @@ func (s *Service) SetBaseURL(ctx context.Context) error {
 	if !ok {
 		return ErrRetrieveMetadata
 	}
-	slice, ok := md["x-forwarded-host"]
-	if !ok {
-		return ErrXForwardedHost
+	if slice, ok := md["x-forwarded-host"]; ok {
+		s.BaseURL = fmt.Sprintf("http://%s", slice[0])
 	}
-	s.BaseURL = fmt.Sprintf("http://%s", slice[0])
 	return nil
 }
 
