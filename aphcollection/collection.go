@@ -24,6 +24,19 @@ func Contains(a []string, s string) bool {
 	return Index(a, s) >= 0
 }
 
+// MapIdx applies the given function to each element of a, returning slice of
+// results
+func MapIdx(a []string, fn func(string, int) string) []string {
+	if len(a) == 0 {
+		return a
+	}
+	sl := make([]string, len(a))
+	for i, v := range a {
+		sl[i] = fn(v, i)
+	}
+	return sl
+}
+
 // Map applies the given function to each element of a, returning slice of
 // results
 func Map(a []string, fn func(string) string) []string {
