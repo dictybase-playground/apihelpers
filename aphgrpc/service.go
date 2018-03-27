@@ -206,6 +206,19 @@ func HandleCreateResponse(ctx context.Context, w http.ResponseWriter, resp proto
 	return nil
 }
 
+// SkipHTTPLinks looks up the context for the presence of gprc metadata
+// for skipping the generation of HTTP links
+func SkipHTTPLinks(ctx context.Context) bool {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return false
+	}
+	if _, ok := md["skip-http-links"]; ok {
+		return true
+	}
+	return false
+}
+
 type Service struct {
 	Dbh             *runner.DB
 	PathPrefix      string
