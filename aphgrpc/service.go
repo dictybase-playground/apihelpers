@@ -280,17 +280,6 @@ func (s *Service) GetPathPrefix() string {
 	return s.PathPrefix
 }
 
-func (s *Service) SetBaseURL(ctx context.Context) error {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return ErrRetrieveMetadata
-	}
-	if slice, ok := md["x-forwarded-host"]; ok {
-		s.BaseURL = fmt.Sprintf("http://%s", slice[0])
-	}
-	return nil
-}
-
 func (s *Service) MapFieldsToColumns(fields []string) []string {
 	var columns []string
 	for _, v := range fields {
@@ -451,4 +440,15 @@ func (s *Service) GenResourceSelfLink(id int64) string {
 		}
 	}
 	return links
+}
+
+func (s *Service) SetBaseURL() error {
+	md, ok := metadata.FromIncomingContext(s.Context)
+	if !ok {
+		return ErrRetrieveMetadata
+	}
+	if slice, ok := md["x-forwarded-host"]; ok {
+		s.BaseURL = fmt.Sprintf("http://%s", slice[0])
+	}
+	return nil
 }
