@@ -219,6 +219,50 @@ func SkipHTTPLinks(ctx context.Context) bool {
 	return false
 }
 
+type ServiceOptions struct {
+	PathPrefix      string
+	Resource        string
+	BaseURL         string
+	Include         []string
+	FieldsToColumns map[string]string
+	FilToColumns    map[string]string
+	ReqAttrs        []string
+}
+
+type Option func(*ServiceOptions)
+
+func JSONAPIResourceOptions(prefix, resource, base string) Option {
+	return func(so *ServiceOptions) {
+		so.PathPrefix = prefix
+		so.Resource = resource
+		so.BaseURL = base
+	}
+}
+
+func ReqAttributesOption(attr []string) Option {
+	return func(so *ServiceOptions) {
+		so.ReqAttrs = attr
+	}
+}
+
+func FilterMappingOptions(fmap map[string]string) Option {
+	return func(so *ServiceOptions) {
+		so.FilToColumns = fmap
+	}
+}
+
+func FieldsMappingOptions(fmap map[string]string) Option {
+	return func(so *ServiceOptions) {
+		so.FieldsToColumns = fmap
+	}
+}
+
+func IncludeOptions(inc []string) Option {
+	return func(so *ServiceOptions) {
+		so.Include = inc
+	}
+}
+
 type Service struct {
 	Dbh             *runner.DB
 	PathPrefix      string
