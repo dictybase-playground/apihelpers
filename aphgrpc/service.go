@@ -233,6 +233,7 @@ type Service struct {
 	Params          *JSONAPIParams
 	ListMethod      bool
 	ReqAttrs        []string
+	Context         context.Context
 }
 
 func (s *Service) RequiredAttrs() []string {
