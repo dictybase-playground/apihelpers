@@ -179,6 +179,11 @@ func HandleError(ctx context.Context, err error) error {
 	return status.Error(codes.Internal, err.Error())
 }
 
+func HandleGenericError(ctx context.Context, err error) error {
+	grpc.SetTrailer(ctx, newError(err.Error()))
+	return status.Error(codes.Internal, err.Error())
+}
+
 func HandleDeleteError(ctx context.Context, err error) error {
 	grpc.SetTrailer(ctx, ErrDatabaseDelete)
 	return status.Error(codes.Internal, err.Error())
