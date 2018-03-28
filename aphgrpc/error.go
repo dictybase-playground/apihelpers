@@ -176,3 +176,28 @@ func HandleError(ctx context.Context, err error) error {
 	grpc.SetTrailer(ctx, newError(err.Error()))
 	return status.Error(codes.Internal, err.Error())
 }
+
+func HandleInsertError(ctx context.Context, err error) error {
+	grpc.SetTrailer(ctx, ErrDatabaseInsert)
+	return status.Error(codes.Internal, err.Error())
+}
+
+func HandleUpdateError(ctx context.Context, err error) error {
+	grpc.SetTrailer(ctx, ErrDatabaseUpdate)
+	return status.Error(codes.Internal, err.Error())
+}
+
+func HandleInsertArgError(ctx context.Context, err error) error {
+	grpc.SetTrailer(ctx, ErrDatabaseInsert)
+	return status.Error(codes.InvalidArgument, err.Error())
+}
+
+func HandleUpdateArgError(ctx context.Context, err error) error {
+	grpc.SetTrailer(ctx, ErrDatabaseUpdate)
+	return status.Error(codes.InvalidArgument, err.Error())
+}
+
+func HandleNotFoundError(ctx context.Context, err error) error {
+	grpc.SetTrailer(ctx, ErrNotFound)
+	return status.Error(codes.NotFound, err.Error())
+}
