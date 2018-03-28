@@ -219,6 +219,19 @@ func SkipHTTPLinks(ctx context.Context) bool {
 	return false
 }
 
+// AssignFieldsToStructs assign the value of
+// fields from one to another structure
+func AssignFieldsToStructs(from interface{}, to interface{}) {
+	toR := structs.New(to)
+	for _, f := range structs.New(from).Fields() {
+		if !f.IsZero() {
+			if nf, ok := toR.FieldOk(f.Name()); ok {
+				nf.Set(f.Value())
+			}
+		}
+	}
+}
+
 type ServiceOptions struct {
 	PathPrefix      string
 	Resource        string
