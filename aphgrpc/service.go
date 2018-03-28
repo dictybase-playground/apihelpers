@@ -240,9 +240,16 @@ type ServiceOptions struct {
 	FieldsToColumns map[string]string
 	FilToColumns    map[string]string
 	ReqAttrs        []string
+	Topics          map[string]string
 }
 
 type Option func(*ServiceOptions)
+
+func TopicsOption(t map[string]string) {
+	return func(so *ServiceOptions) {
+		so.Topics = t
+	}
+}
 
 func JSONAPIResourceOptions(prefix, resource, base string) Option {
 	return func(so *ServiceOptions) {
@@ -297,6 +304,7 @@ type Service struct {
 	ListMethod      bool
 	ReqAttrs        []string
 	Context         context.Context
+	Topics          map[string]string
 }
 
 func (s *Service) RequiredAttrs() []string {
