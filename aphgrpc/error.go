@@ -34,6 +34,8 @@ var (
 	ErrDatabaseDelete = newError("Database delete error")
 	//ErrNotFound represents the absence of an HTTP resource
 	ErrNotFound = newError("Resource not found")
+	//ErrExists represents the presence of an HTTP resource
+	ErrExists = newError("Resource already exists")
 	//ErrJSONEncoding represents any json encoding error
 	ErrJSONEncoding = newError("Json encoding error")
 	//ErrStructMarshal represents any error with marshalling structure
@@ -215,4 +217,9 @@ func HandleUpdateArgError(ctx context.Context, err error) error {
 func HandleNotFoundError(ctx context.Context, err error) error {
 	grpc.SetTrailer(ctx, ErrNotFound)
 	return status.Error(codes.NotFound, err.Error())
+}
+
+func HandleExistError(ctx context.Context, err error) error {
+	grpc.SetTrailer(ctx, ErrExists)
+	return status.Error(codes.AlreadyExists, err.Error())
 }
