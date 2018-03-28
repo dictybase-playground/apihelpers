@@ -252,6 +252,12 @@ func JSONAPIResourceOptions(prefix, resource, base string) Option {
 	}
 }
 
+func BaseURLOption(base string) Option {
+	return func(so *ServiceOptions) {
+		so.BaseURL = base
+	}
+}
+
 func ReqAttributesOption(attr []string) Option {
 	return func(so *ServiceOptions) {
 		so.ReqAttrs = attr
