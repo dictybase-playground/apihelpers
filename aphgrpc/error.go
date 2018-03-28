@@ -177,6 +177,16 @@ func HandleError(ctx context.Context, err error) error {
 	return status.Error(codes.Internal, err.Error())
 }
 
+func HandleDeleteError(ctx context.Context, err error) error {
+	grpc.SetTrailer(ctx, ErrDatabaseDelete)
+	return status.Error(codes.Internal, err.Error())
+}
+
+func HandleGetError(ctx context.Context, err error) error {
+	grpc.SetTrailer(ctx, ErrDatabaseQuery)
+	return status.Error(codes.Internal, err.Error())
+}
+
 func HandleInsertError(ctx context.Context, err error) error {
 	grpc.SetTrailer(ctx, ErrDatabaseInsert)
 	return status.Error(codes.Internal, err.Error())
@@ -185,6 +195,11 @@ func HandleInsertError(ctx context.Context, err error) error {
 func HandleUpdateError(ctx context.Context, err error) error {
 	grpc.SetTrailer(ctx, ErrDatabaseUpdate)
 	return status.Error(codes.Internal, err.Error())
+}
+
+func HandleGetArgError(ctx context.Context, err error) error {
+	grpc.SetTrailer(ctx, ErrDatabaseQuery)
+	return status.Error(codes.InvalidArgument, err.Error())
 }
 
 func HandleInsertArgError(ctx context.Context, err error) error {
