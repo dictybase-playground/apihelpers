@@ -171,7 +171,7 @@ func CheckNoRows(err error) bool {
 	return false
 }
 
-func HandleMessagingError(ctx context.Context, st spb.Status) error {
+func HandleMessagingError(ctx context.Context, st *spb.Status) error {
 	err := status.ErrorProto(st)
 	grpc.SetTrailer(ctx, newError(err.Error()))
 	return err

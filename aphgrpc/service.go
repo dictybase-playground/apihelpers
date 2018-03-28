@@ -245,7 +245,7 @@ type ServiceOptions struct {
 
 type Option func(*ServiceOptions)
 
-func TopicsOption(t map[string]string) {
+func TopicsOption(t map[string]string) Option {
 	return func(so *ServiceOptions) {
 		so.Topics = t
 	}
