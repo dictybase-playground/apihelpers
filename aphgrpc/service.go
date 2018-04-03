@@ -1,6 +1,7 @@
 package aphgrpc
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"net/http"
@@ -16,13 +17,27 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	context "golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
 )
 
 const (
 	DefaultPagenum  int64 = 1
 	DefaultPagesize int64 = 10
+)
+
+type contextKey string
+
+// String output the details of context key
+func (c contextKey) String() string {
+	return "pagination context key " + string(c)
+}
+
+var (
+	ContextKeyParams  = contextKey("params")
+	ContextKeyInclude = contextKey("includeStr")
+	ContextKeyFilter  = contextKey("filterStr")
+	ContextKeyFields  = contextKey("fieldsStr")
+	ContextKeyIsList  = contextKey("isListMethod")
 )
 
 // JSONAPIParamsInfo interface should be implement by all grpc-gateway services
@@ -219,8 +234,8 @@ func SkipHTTPLinks(ctx context.Context) bool {
 	return false
 }
 
-// AssignFieldsToStructs assign the value of
-// fields from one to another structure
+// AssignFieldsToStructs copy fields value
+// between structure
 func AssignFieldsToStructs(from interface{}, to interface{}) {
 	toR := structs.New(to)
 	for _, f := range structs.New(from).Fields() {
@@ -293,14 +308,10 @@ type Service struct {
 	Dbh             *runner.DB
 	PathPrefix      string
 	Include         []string
-	IncludeStr      string
 	FieldsToColumns map[string]string
-	FieldsStr       string
 	Resource        string
 	BaseURL         string
 	FilToColumns    map[string]string
-	FilterStr       string
-	Params          *JSONAPIParams
 	ListMethod      bool
 	ReqAttrs        []string
 	Context         context.Context
@@ -359,19 +370,23 @@ func (s *Service) MapFieldsToColumns(fields []string) []string {
 	return columns
 }
 
-func (s *Service) GetCount(table string) (int64, error) {
+func (s *Service) GetCount(ctx context.Context, table string) (int64, error) {
 	var count int64
 	err := s.Dbh.Select("COUNT(*)").From(table).QueryScalar(&count)
 	return count, err
 }
 
-func (s *Service) GetAllFilteredCount(table string) (int64, error) {
+func (s *Service) GetAllFilteredCount(ctx context.Context, table string) (int64, error) {
 	var count int64
+	params, ok := ctx.Value(ContextKeyParams).(*JSONAPIParams)
+	if !ok {
+		return count, fmt.Errorf("no params object found in context")
+	}
 	err := s.Dbh.Select("COUNT(*)").
 		From(table).
 		Scope(
-			FilterToWhereClause(s, s.Params.Filters),
-			FilterToBindValue(s.Params.Filters)...,
+			FilterToWhereClause(s, params.Filters),
+			FilterToBindValue(params.Filters)...,
 		).QueryScalar(&count)
 	return count, err
 }
@@ -396,55 +411,57 @@ func (s *Service) GetRelatedPagination(id, record, pagenum, pagesize int64, rela
 }
 
 // GetPagination generates JSONAPI pagination links along with fields, include and filter query parameters
-func (s *Service) GetPagination(record, pagenum, pagesize int64) (*jsonapi.PaginationLinks, int64) {
+func (s *Service) GetPagination(ctx context.Context, record, pagenum, pagesize int64) (*jsonapi.PaginationLinks, int64) {
 	pages := GetTotalPageNum(record, pagesize)
-	baseLink := s.GenCollResourceSelfLink()
+	baseLink := s.GenCollResourceSelfLink(ctx)
 	pageLinks := GenPaginatedLinks(baseLink, pages, pagenum, pagesize)
 	pageType := []string{"self", "last", "first", "previous", "next"}
-
-	if s.Params != nil {
-		params := s.Params
+	params, ok := ctx.Value(ContextKeyParams).(*JSONAPIParams)
+	includeStr, _ := ctx.Value(ContextKeyInclude).(string)
+	fieldsStr, _ := ctx.Value(ContextKeyFields).(string)
+	filterStr, _ := ctx.Value(ContextKeyFilter).(string)
+	if ok {
 		switch {
 		case params.HasFields && params.HasInclude && params.HasFilter:
 			for _, v := range pageType {
 				if _, ok := pageLinks[v]; ok {
-					pageLinks[v] += fmt.Sprintf("&fields=%s&include=%s&filter=%s", s.FieldsStr, s.IncludeStr, s.FilterStr)
+					pageLinks[v] += fmt.Sprintf("&fields=%s&include=%s&filter=%s", fieldsStr, includeStr, filterStr)
 				}
 			}
 		case params.HasFields && params.HasInclude:
 			for _, v := range pageType {
 				if _, ok := pageLinks[v]; ok {
-					pageLinks[v] += fmt.Sprintf("&fields=%s&include=%s", s.FieldsStr, s.IncludeStr)
+					pageLinks[v] += fmt.Sprintf("&fields=%s&include=%s", fieldsStr, includeStr)
 				}
 			}
 		case params.HasFields && params.HasFilter:
 			for _, v := range pageType {
 				if _, ok := pageLinks[v]; ok {
-					pageLinks[v] += fmt.Sprintf("&fields=%s&filter=%s", s.FieldsStr, s.FilterStr)
+					pageLinks[v] += fmt.Sprintf("&fields=%s&filter=%s", fieldsStr, filterStr)
 				}
 			}
 		case params.HasInclude && params.HasFilter:
 			for _, v := range pageType {
 				if _, ok := pageLinks[v]; ok {
-					pageLinks[v] += fmt.Sprintf("&include=%s&filter=%s", s.IncludeStr, s.FilterStr)
+					pageLinks[v] += fmt.Sprintf("&include=%s&filter=%s", includeStr, filterStr)
 				}
 			}
 		case params.HasInclude:
 			for _, v := range pageType {
 				if _, ok := pageLinks[v]; ok {
-					pageLinks[v] += fmt.Sprintf("&include=%s", s.IncludeStr)
+					pageLinks[v] += fmt.Sprintf("&include=%s", includeStr)
 				}
 			}
 		case params.HasFilter:
 			for _, v := range pageType {
 				if _, ok := pageLinks[v]; ok {
-					pageLinks[v] += fmt.Sprintf("&filter=%s", s.FilterStr)
+					pageLinks[v] += fmt.Sprintf("&filter=%s", filterStr)
 				}
 			}
 		case params.HasFields:
 			for _, v := range pageType {
 				if _, ok := pageLinks[v]; ok {
-					pageLinks[v] += fmt.Sprintf("&fields=%s", s.FieldsStr)
+					pageLinks[v] += fmt.Sprintf("&fields=%s", fieldsStr)
 				}
 			}
 		}
@@ -472,42 +489,48 @@ func (s *Service) GenCollResourceRelSelfLink(id int64, relation string) string {
 	)
 }
 
-func (s *Service) GenCollResourceSelfLink() string {
+func (s *Service) GenCollResourceSelfLink(ctx context.Context) string {
 	link := GenMultiResourceLink(s)
-	if s.Params == nil {
+	params, ok := ctx.Value(ContextKeyParams).(*JSONAPIParams)
+	if !ok {
 		return link
 	}
-	params := s.Params
+	includeStr, _ := ctx.Value(ContextKeyInclude).(string)
+	fieldsStr, _ := ctx.Value(ContextKeyFields).(string)
+	filterStr, _ := ctx.Value(ContextKeyFilter).(string)
 	switch {
 	case params.HasFields && params.HasFilter && params.HasInclude:
-		link += fmt.Sprintf("?fields=%s&include=%s&filter=%s", s.FieldsStr, s.IncludeStr, s.FilterStr)
+		link += fmt.Sprintf("?fields=%s&include=%s&filter=%s", fieldsStr, includeStr, filterStr)
 	case params.HasFields && params.HasFilter:
-		link += fmt.Sprintf("?fields=%s&filter=%s", s.FieldsStr, s.FilterStr)
+		link += fmt.Sprintf("?fields=%s&filter=%s", fieldsStr, filterStr)
 	case params.HasFields && params.HasInclude:
-		link += fmt.Sprintf("?fields=%s&include=%s", s.FieldsStr, s.IncludeStr)
+		link += fmt.Sprintf("?fields=%s&include=%s", fieldsStr, includeStr)
 	case params.HasFilter && params.HasInclude:
-		link += fmt.Sprintf("?filter=%s&include=%s", s.FilterStr, s.IncludeStr)
+		link += fmt.Sprintf("?filter=%s&include=%s", filterStr, includeStr)
 	case params.HasInclude:
-		link += fmt.Sprintf("?include=%s", s.IncludeStr)
+		link += fmt.Sprintf("?include=%s", includeStr)
 	case params.HasFilter:
-		link += fmt.Sprintf("?filter=%s", s.FilterStr)
+		link += fmt.Sprintf("?filter=%s", filterStr)
 	case params.HasFields:
-		link += fmt.Sprintf("?fields=%s", s.FieldsStr)
+		link += fmt.Sprintf("?fields=%s", fieldsStr)
 	}
 	return link
 }
 
-func (s *Service) GenResourceSelfLink(id int64) string {
+func (s *Service) GenResourceSelfLink(ctx context.Context, id int64) string {
 	links := GenSingleResourceLink(s, id)
-	if !s.IsListMethod() && s.Params != nil {
-		params := s.Params
+	params, ok := ctx.Value(ContextKeyParams).(*JSONAPIParams)
+	_, lok := ctx.Value(ContextKeyIsList).(string)
+	if !lok && ok {
+		includeStr, _ := ctx.Value(ContextKeyInclude).(string)
+		fieldsStr, _ := ctx.Value(ContextKeyFields).(string)
 		switch {
 		case params.HasFields && params.HasInclude:
-			links += fmt.Sprintf("?fields=%s&include=%s", s.FieldsStr, s.IncludeStr)
+			links += fmt.Sprintf("?fields=%s&include=%s", fieldsStr, includeStr)
 		case params.HasFields:
-			links += fmt.Sprintf("?fields=%s", s.FieldsStr)
+			links += fmt.Sprintf("?fields=%s", fieldsStr)
 		case params.HasInclude:
-			links += fmt.Sprintf("?include=%s", s.IncludeStr)
+			links += fmt.Sprintf("?include=%s", includeStr)
 		}
 	}
 	return links
