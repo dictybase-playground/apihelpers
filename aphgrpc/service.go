@@ -11,6 +11,7 @@ import (
 	"gopkg.in/mgutz/dat.v2/dat"
 	"gopkg.in/mgutz/dat.v2/sqlx-runner"
 
+	"github.com/dictyBase/apihelpers/aphgrpc"
 	"github.com/dictyBase/go-genproto/dictybaseapis/api/jsonapi"
 	"github.com/fatih/structs"
 	"github.com/golang/protobuf/proto"
@@ -232,6 +233,34 @@ func SkipHTTPLinks(ctx context.Context) bool {
 		return true
 	}
 	return false
+}
+
+// ListReqCtx generate context data from list(collection) request
+func ListReqCtx(params *JSONAPIParams, r *jsonapi.ListRequest) context.Context {
+	ctx := context.WithValue(context.Background(), aphgrpc.ContextKeyIsList, "yes")
+	ctx = context.WithValue(ctx, aphgrpc.ContextKeyParams, params)
+	if params.HasInclude {
+		ctx = context.WithValue(ctx, aphgrpc.ContextKeyInclude, r.Include)
+	}
+	if params.HasFields {
+		ctx = context.WithValue(ctx, aphgrpc.ContextKeyFields, r.Fields)
+	}
+	if params.HasFilter {
+		ctx = context.WithValue(ctx, aphgrpc.ContextKeyFilter, r.Filter)
+	}
+	return ctx
+}
+
+// GetReqCtx generate a context data from get request
+func GetReqCtx(params *JSONAPIParams, r *jsonapi.GetRequest) context.Context {
+	ctx := context.WithValue(context.Background(), aphgrpc.ContextKeyParams, params)
+	if params.HasInclude {
+		ctx = context.WithValue(ctx, aphgrpc.ContextKeyInclude, r.Include)
+	}
+	if params.HasFields {
+		ctx = context.WithValue(ctx, aphgrpc.ContextKeyFields, r.Fields)
+	}
+	return ctx
 }
 
 // AssignFieldsToStructs copy fields value
