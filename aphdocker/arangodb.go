@@ -145,16 +145,16 @@ func (d *ArangoDocker) RetryConnection() (driver.Client, error) {
 			),
 		})
 	if err != nil {
-		return client, err
+		return client, fmt.Errorf("could not get a client %s\n", err)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), 550*time.Millisecond)
 	defer cancel()
 	_, err = client.Version(ctx)
 	if err != nil {
 		if driver.IsTimeout(err) {
 			return client, fmt.Errorf("connection timed out")
 		}
-		return client, err
+		return client, fmt.Errorf("some unknown error %s\n", err)
 	}
 	return client, nil
 }
