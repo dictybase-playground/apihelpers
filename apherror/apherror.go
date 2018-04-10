@@ -14,6 +14,14 @@ import (
 var (
 	//HTTPError represents generic http errors
 	Errhttp = errors.NewClass("HTTP Error", errors.NoCaptureStack())
+	//ErrMessagingReply represents error in request reply messaging
+	ErrMessagingReply = newErrorClass("messaging reply error", http.StatusInternalServerError)
+	//ErrMessagingReq represents error in request reply messaging
+	ErrMessagingReq = newErrorClass("messaging request error", http.StatusInternalServerError)
+	//ErrMessagingSub represents error in publish subscribe messaging
+	ErrMessagingSub = newErrorClass("messaging subscription error", http.StatusInternalServerError)
+	//ErrMessagingPub represents error in publish subscribe messaging
+	ErrMessagingPub = newErrorClass("messaging publication error", http.StatusInternalServerError)
 	//ErrReqContext represents error in extracting context value from http request
 	ErrReqContext = newErrorClass("Unable to retrieve context", http.StatusInternalServerError)
 	//ErrOuthExchange represents error in exchanging code for token with oauth server
