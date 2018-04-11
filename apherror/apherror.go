@@ -32,6 +32,8 @@ var (
 	ErrDatabaseQuery = newErrorClass("Database query error", http.StatusInternalServerError)
 	//ErrNotFound represents the absence of an HTTP resource
 	ErrNotFound = newErrorClass("Resource not found", http.StatusNotFound)
+	//ErrAuthentication represents the absence of valid authentication credentials
+	ErrAuthentication = newErrorClass("Invalid credential for authentication", http.StatusUnauthorized)
 	//ErrJSONEncoding represents any json encoding error
 	ErrJSONEncoding = newErrorClass("Json encoding error", http.StatusInternalServerError)
 	//ErrStructMarshal represents any error with marshalling structure
