@@ -12,23 +12,11 @@ import (
 	"github.com/minio/minio-go"
 )
 
-func FetchRemoteFile(s3Client *minio.Client, bucket, path, name string) (string, error) {
-	tmpf, err := ioutil.TempFile("", name)
-	if err != nil {
-		return "", err
-	}
-	if err := s3Client.FGetObject(bucket, path, tmpf.Name()); err != nil {
-		return "", fmt.Errorf("Unable to retrieve the object %s", err.Error(), 2)
-	}
-	return tmpf.Name(), nil
+func FetchRemoteFile(s3Client *minio.Client, bucket, path string) (io.Reader, error) {
+	return s3Client.GetObject(bucket, path, minio.GetObjectOptions{})
 }
 
-func Untar(src, target string) error {
-	reader, err := os.Open(src)
-	if err != nil {
-		return fmt.Errorf("could not open file reading %s", err)
-	}
-	defer reader.Close()
+func Untar(reader io.Reader, target string) error {
 	archive, err := gzip.NewReader(reader)
 	if err != nil {
 		return fmt.Errorf("could not read from gzip file %s", err)
@@ -81,7 +69,7 @@ func GetS3Client(server, access, secret string) (*minio.Client, error) {
 }
 
 func FetchAndDecompress(client *minio.Client, bucket, path, name string) (string, error) {
-	filename, err := FetchRemoteFile(client, bucket, path, name)
+	reader, err := FetchRemoteFile(client, bucket, path)
 	if err != nil {
 		return "", fmt.Errorf("unable to fetch remote file %s ", err)
 	}
@@ -89,7 +77,7 @@ func FetchAndDecompress(client *minio.Client, bucket, path, name string) (string
 	if err != nil {
 		return "", fmt.Errorf("unable to create temp directory %s", err)
 	}
-	err = Untar(filename, tmpDir)
+	err = Untar(reader, tmpDir)
 	if err != nil {
 		return "", fmt.Errorf("error in untarring file %s", err)
 	}
