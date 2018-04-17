@@ -60,7 +60,7 @@ func GetS3Client(server, access, secret string) (*minio.Client, error) {
 		server,
 		access,
 		secret,
-		true,
+		false,
 	)
 	if err != nil {
 		return s3Client, fmt.Errorf("unable create the client %s", err.Error())
