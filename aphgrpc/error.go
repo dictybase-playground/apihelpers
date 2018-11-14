@@ -235,3 +235,8 @@ func HandleExistError(ctx context.Context, err error) error {
 	grpc.SetTrailer(ctx, ErrExists)
 	return status.Error(codes.AlreadyExists, err.Error())
 }
+
+func HandleFilterParamError(ctx context.Context, err error) error {
+	grpc.SetTrailer(ctx, ErrFilterParam)
+	return status.Error(codes.InvalidArgument, err.Error())
+}
