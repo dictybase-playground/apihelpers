@@ -244,6 +244,6 @@ func HandleFilterParamError(ctx context.Context, err error) error {
 }
 
 func HandleInvalidParamError(ctx context.Context, err error) error {
-	grpc.SetTrailer(ctx.ErrInValidParam)
+	grpc.SetTrailer(ctx, ErrInValidParam)
 	return status.Error(codes.InvalidArgument, err.Error())
 }
