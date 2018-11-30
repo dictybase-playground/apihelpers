@@ -51,6 +51,8 @@ var (
 	ErrNotAcceptable = newError("Accept header is not acceptable")
 	//ErrUnsupportedMedia represents any error with unsupported media type in http header
 	ErrUnsupportedMedia = newError("Media type is not supported")
+	//ErrInValidParam represents any error with validating input parameters
+	ErrInValidParam = newError("Invalid parameters")
 	//ErrRetrieveMetadata represents any error to retrieve grpc metadata from the running context
 	ErrRetrieveMetadata = errors.New("unable to retrieve metadata")
 	//ErrXForwardedHost represents any failure or absence of x-forwarded-host HTTP header in the grpc context
@@ -238,5 +240,10 @@ func HandleExistError(ctx context.Context, err error) error {
 
 func HandleFilterParamError(ctx context.Context, err error) error {
 	grpc.SetTrailer(ctx, ErrFilterParam)
+	return status.Error(codes.InvalidArgument, err.Error())
+}
+
+func HandleInvalidParamError(ctx context.Context, err error) error {
+	grpc.SetTrailer(ctx.ErrInValidParam)
 	return status.Error(codes.InvalidArgument, err.Error())
 }
