@@ -11,7 +11,7 @@ import (
 	"time"
 
 	driver "github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/vst"
+	"github.com/arangodb/go-driver/http"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -127,10 +127,11 @@ func (d *ArangoDocker) Purge(resp container.ContainerCreateCreatedBody) error {
 }
 
 func (d *ArangoDocker) RetryConnection() (driver.Client, error) {
-	conn, err := vst.NewConnection(
-		vst.ConnectionConfig{
+	time.Sleep(2 * time.Second)
+	conn, err := http.NewConnection(
+		http.ConnectionConfig{
 			Endpoints: []string{
-				fmt.Sprintf("vst://%s:%s", d.GetIP(), d.GetPort()),
+				fmt.Sprintf("http://%s:%s", d.GetIP(), d.GetPort()),
 			},
 		})
 	if err != nil {
