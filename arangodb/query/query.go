@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 )
 
 // regex to capture all variations of filter string
-var qre = regexp.MustCompile(`(\w+)(\=\=|\!\=|\=\=\=|\!\=\=|\~|\!\~|>|<|>\=|\=<)(\w+)(\,|\;)?`)
+var qre = regexp.MustCompile(`(\w+)(\=\=|\!\=|\=\=\=|\!\=\=|\~|\!\~|>|<|>\=|\=<|\$\=\=|\$\>|\$\>\=|\$\<|\$\<\=)(\w+)(\,|\;)?`)
 
 // Filter is a container for filter parameters
 type Filter struct {
@@ -23,14 +24,31 @@ type Filter struct {
 
 func getOperatorMap() map[string]string {
 	return map[string]string{
-		"==": "==",
-		"!=": "!=",
-		">":  ">",
-		"<":  "<",
-		">=": ">=",
-		"<=": "<=",
-		"~":  "=~",
-		"!~": "!~",
+		"==":  "==",
+		"===": "==",
+		"!=":  "!=",
+		">":   ">",
+		"<":   "<",
+		">=":  ">=",
+		"<=":  "<=",
+		"~":   "=~",
+		"!~":  "!~",
+		"$==": "==",
+		"$>":  ">",
+		"$<":  "<",
+		"$>=": ">=",
+		"$<=": "<=",
+	}
+}
+
+// map values that are predefined as dates
+func getDateOperatorMap() map[string]string {
+	return map[string]string{
+		"$==": "==",
+		"$>":  ">",
+		"$<":  "<",
+		"$>=": ">=",
+		"$<=": "<=",
 	}
 }
 
@@ -77,34 +95,68 @@ func GenAQLFilterStatement(fmap map[string]string, filters []*Filter) string {
 	lmap := map[string]string{",": "OR", ";": "AND"}
 	// get map of all allowed operators
 	omap := getOperatorMap()
+	// get map of all date operators
+	dmap := getDateOperatorMap()
 	// initialize variable for a string builder
 	var clause strings.Builder
 	// write FILTER to this string
 	clause.WriteString("FILTER ")
 	// loop over items in filters slice
 	for _, f := range filters {
-		// write the rest of AQL statement based on data
-		clause.WriteString(
-			fmt.Sprintf(
-				"%s %s %s",
-				fmap[f.Field],
-				omap[f.Operator],
-				checkAndQuote(f.Operator, f.Value),
-			),
-		)
-		// if there's logic, write that too
-		if len(f.Logic) != 0 {
-			clause.WriteString(fmt.Sprintf(" %s ", lmap[f.Logic]))
+		// check if operator is for a date
+		if _, ok := dmap[f.Operator]; ok {
+			// convert given date to milliseconds
+			d := convertDateToMilliseconds(f.Value)
+			// write time conversion into AQL query
+			clause.WriteString(
+				fmt.Sprintf(
+					"%s %s DATE_ISO8601(%v)",
+					fmap[f.Field],
+					omap[f.Operator],
+					d,
+				),
+			)
+			// if there's logic, write that too
+			if len(f.Logic) != 0 {
+				clause.WriteString(fmt.Sprintf(" %s ", lmap[f.Logic]))
+			}
+		} else {
+			// write the rest of AQL statement based on non-date data
+			clause.WriteString(
+				fmt.Sprintf(
+					"%s %s %s",
+					fmap[f.Field],
+					omap[f.Operator],
+					checkAndQuote(f.Operator, f.Value),
+				),
+			)
+			// if there's logic, write that too
+			if len(f.Logic) != 0 {
+				clause.WriteString(fmt.Sprintf(" %s ", lmap[f.Logic]))
+			}
 		}
 	}
 	// return the string
 	return clause.String()
 }
 
-// check if operator is for a string
+// check if operator is used for a string
 func checkAndQuote(op, value string) string {
 	if op == "===" || op == "!==" || op == "=~" || op == "!~" {
 		return fmt.Sprintf("'%s'", value)
 	}
 	return value
+}
+
+func convertDateToMilliseconds(value string) int64 {
+	// this indicates date, which is in YYYYMMDD format
+	layout := "20060102"
+	// parse string to time object
+	t, err := time.Parse(layout, value)
+	if err != nil {
+		fmt.Println(err)
+	}
+	// convert time object to milliseconds
+	ts := t.UnixNano() / 1000000
+	return ts
 }
