@@ -3,8 +3,10 @@ package query
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
-	"time"
+
+	"github.com/jinzhu/now"
 )
 
 // regex to capture all variations of filter string
@@ -90,7 +92,7 @@ func ParseFilterString(fstr string) ([]*Filter, error) {
 
 // GenAQLFilterStatement generates an AQL(arangodb query language) compatible
 // filter query statement
-func GenAQLFilterStatement(fmap map[string]string, filters []*Filter) string {
+func GenAQLFilterStatement(fmap map[string]string, filters []*Filter) (string, error) {
 	// set map for logic
 	lmap := map[string]string{",": "OR", ";": "AND"}
 	// get map of all allowed operators
@@ -106,7 +108,11 @@ func GenAQLFilterStatement(fmap map[string]string, filters []*Filter) string {
 		// check if operator is for a date
 		if _, ok := dmap[f.Operator]; ok {
 			// convert given date to milliseconds
-			d := convertDateToMilliseconds(f.Value)
+			d, err := convertDateToMilliseconds(f.Value)
+			if err != nil {
+				fmt.Errorf("could not convert date: %s", err)
+				return strconv.Itoa(int(d)), err
+			}
 			// write time conversion into AQL query
 			clause.WriteString(
 				fmt.Sprintf(
@@ -137,7 +143,7 @@ func GenAQLFilterStatement(fmap map[string]string, filters []*Filter) string {
 		}
 	}
 	// return the string
-	return clause.String()
+	return clause.String(), nil
 }
 
 // check if operator is used for a string
@@ -148,15 +154,16 @@ func checkAndQuote(op, value string) string {
 	return value
 }
 
-func convertDateToMilliseconds(value string) int64 {
-	// this indicates date, which is in YYYYMMDD format
-	layout := "20060102"
-	// parse string to time object
-	t, err := time.Parse(layout, value)
+func convertDateToMilliseconds(value string) (int64, error) {
+	// set accepted date formats
+	now.TimeFormats = append(now.TimeFormats, "20060102", "200601", "2006")
+	// parse date string to time object
+	t, err := now.Parse(value)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Errorf("could not parse string: %s", err)
+		return 0, err
 	}
 	// convert time object to milliseconds
 	ts := t.UnixNano() / 1000000
-	return ts
+	return ts, nil
 }
