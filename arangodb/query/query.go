@@ -10,7 +10,7 @@ import (
 )
 
 // regex to capture all variations of filter string
-var qre = regexp.MustCompile(`(\w+)(\=\=|\!\=|\=\=\=|\!\=\=|\~|\!\~|>|<|>\=|\=<|\$\=\=|\$\>|\$\>\=|\$\<|\$\<\=)(\w+)(\,|\;)?`)
+var qre = regexp.MustCompile(`(\w+)(\=\=|\!\=|\=\=\=|\!\=\=|\~|\!\~|>|<|>\=|\=<|\$\=\=|\$\>|\$\>\=|\$\<|\$\<\=)(\w+\-\w+\-\w+|\w+\-\w+|\w+)(\,|\;)?`)
 
 // Filter is a container for filter parameters
 type Filter struct {
