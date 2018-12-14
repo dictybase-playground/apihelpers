@@ -9,7 +9,7 @@ import (
 )
 
 // regex to capture all variations of filter string
-var qre = regexp.MustCompile(`(\w+)(\=\=|\!\=|\=\=\=|\!\=\=|\~|\!\~|>|<|>\=|\=<|\$\=\=|\$\>|\$\>\=|\$\<|\$\<\=)(\d{4}\-[0-1][0-9]\-[0-3][0-9]|\d{4}\-[0-1][0-9]|\w+)(\,|\;)?`)
+var qre = regexp.MustCompile(`(\w+)(\=\=|\!\=|\=\=\=|\!\=\=|\~|\!\~|>|<|>\=|\=<|\$\=\=|\$\>|\$\>\=|\$\<|\$\<\=)([\w-]+)(\,|\;)?`)
 
 // Filter is a container for filter parameters
 type Filter struct {
@@ -109,8 +109,7 @@ func GenAQLFilterStatement(fmap map[string]string, filters []*Filter) (string, e
 			// validate date format
 			d, err := dateValidator(f.Value)
 			if err != nil {
-				fmt.Errorf("could not convert date: %s", err)
-				return d, err
+				return "could not convert date", err
 			}
 			// write time conversion into AQL query
 			clause.WriteString(
