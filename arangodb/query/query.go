@@ -3,7 +3,6 @@ package query
 import (
 	"fmt"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/jinzhu/now"
@@ -107,16 +106,16 @@ func GenAQLFilterStatement(fmap map[string]string, filters []*Filter) (string, e
 	for _, f := range filters {
 		// check if operator is for a date
 		if _, ok := dmap[f.Operator]; ok {
-			// convert given date to milliseconds
-			d, err := convertDateToMilliseconds(f.Value)
+			// validate date format
+			d, err := dateValidator(f.Value)
 			if err != nil {
 				fmt.Errorf("could not convert date: %s", err)
-				return strconv.Itoa(int(d)), err
+				return d, err
 			}
 			// write time conversion into AQL query
 			clause.WriteString(
 				fmt.Sprintf(
-					"%s %s DATE_ISO8601(%v)",
+					"%s %s DATE_ISO8601('%s')",
 					fmap[f.Field],
 					omap[f.Operator],
 					d,
@@ -154,16 +153,16 @@ func checkAndQuote(op, value string) string {
 	return value
 }
 
-func convertDateToMilliseconds(value string) (int64, error) {
-	// set accepted date formats
-	now.TimeFormats = append(now.TimeFormats, "20060102", "200601", "2006")
-	// parse date string to time object
-	t, err := now.Parse(value)
+func dateValidator(date string) (string, error) {
+	// regex to capture all variations of filter string
+	var dre = regexp.MustCompile(`(^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])|^\d{4}\-(0[1-9]|1[012])|\d{4})?`)
+	// get all regex matches for date
+	m := dre.FindAllString(date, -1)
+	// grab valid date and parse to time object
+	_, err := now.Parse(m[0])
 	if err != nil {
-		fmt.Errorf("could not parse string: %s", err)
-		return 0, err
+		return "could not parse date string", err
 	}
-	// convert time object to milliseconds
-	ts := t.UnixNano() / 1000000
-	return ts, nil
+	// if date is valid, return the original string since it matches AQL input format
+	return m[0], nil
 }
