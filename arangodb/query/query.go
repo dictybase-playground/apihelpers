@@ -11,6 +11,10 @@ import (
 // regex to capture all variations of filter string
 var qre = regexp.MustCompile(`(\w+)(\=\=|\!\=|\=\=\=|\!\=\=|\~|\!\~|>|<|>\=|\=<|\$\=\=|\$\>|\$\>\=|\$\<|\$\<\=)([\w-]+)(\,|\;)?`)
 
+// regex to capture all variations of date string
+// https://play.golang.org/p/NzeBmlQh13v
+var dre = regexp.MustCompile(`^\d{4}\-(0[1-9]|1[012])$|^\d{4}$|^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$`)
+
 // Filter is a container for filter parameters
 type Filter struct {
 	// Field of the object on which the filter will be applied
@@ -80,6 +84,9 @@ func ParseFilterString(fstr string) ([]*Filter, error) {
 			Value:    n[3],
 		}
 		if len(n) == 5 {
+			// if n[4] != ";" || n[4] != "," {
+			// 	return filters, fmt.Errorf("did not find logic operator")
+			// }
 			f.Logic = n[4]
 		}
 		// add this Filter to slice
@@ -153,15 +160,16 @@ func checkAndQuote(op, value string) string {
 }
 
 func dateValidator(date string) (string, error) {
-	// regex to capture all variations of filter string
-	var dre = regexp.MustCompile(`(^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])|^\d{4}\-(0[1-9]|1[012])|\d{4})?`)
 	// get all regex matches for date
-	m := dre.FindAllString(date, -1)
+	m := dre.FindString(date)
+	if len(m) == 0 {
+		return "", fmt.Errorf("invalid date")
+	}
 	// grab valid date and parse to time object
-	_, err := now.Parse(m[0])
+	_, err := now.Parse(m)
 	if err != nil {
 		return "could not parse date string", err
 	}
 	// if date is valid, return the original string since it matches AQL input format
-	return m[0], nil
+	return m, nil
 }
