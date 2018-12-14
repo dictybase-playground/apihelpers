@@ -84,9 +84,6 @@ func ParseFilterString(fstr string) ([]*Filter, error) {
 			Value:    n[3],
 		}
 		if len(n) == 5 {
-			// if n[4] != ";" || n[4] != "," {
-			// 	return filters, fmt.Errorf("did not find logic operator")
-			// }
 			f.Logic = n[4]
 		}
 		// add this Filter to slice
