@@ -1,5 +1,5 @@
 development:
-  auto_deploy_on: refs/heads/develop
+  auto_deploy_on: develop
   # Wait for our ci pipeline to pass.
   required_contexts: ["ci"]
   environment: pr-${{ pr }}
