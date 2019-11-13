@@ -12,6 +12,7 @@ jobs:
             - name: deploy 
               run: |
                   echo "deployment - ${{ toJson(github.event.deployment) }}"
+                  echo "github ref - ${{ github.ref }}"
             - name: successful deployment 
               if: success()
               uses: deliverybot/deployment-status@master
