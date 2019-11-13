@@ -1,0 +1,12 @@
+development:
+  auto_deploy_on: refs/heads/develop
+  # Wait for our ci pipeline to pass.
+  required_contexts: ["ci"]
+  environment: pr-${{ pr }}
+  payload:
+      ref: ${{ ref }}
+      sha: ${{ short_sha }}
+      pull_request: ${{ pull_request }}
+      repository: $ {{ repo }}
+      target: ${{ target }}
+
