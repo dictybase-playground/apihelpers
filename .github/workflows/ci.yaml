@@ -1,0 +1,14 @@
+name: Continuous integration
+on:
+  push:
+    branches:
+      - develop
+jobs:
+    ci:
+        runs-on: ubuntu-18.04
+        steps:
+            - name: check out code
+              uses: action/checkout@v1
+            - name: test and build 
+              run: echo 'ok'
+

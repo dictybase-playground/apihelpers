@@ -1,0 +1,28 @@
+name: Deployment
+on: [deployment]
+jobs:
+    deployment:
+        runs-on: ubuntu-18.04
+        steps:
+            - name: pending deployment 
+              uses: deliverybot/deployment-status@master 
+              with:
+                  state: pending 
+                  token: ${{ github.token }}
+            - name: deploy 
+              run: |
+                  echo "deployment - ${{ toJson(github.event.deployment) }}"
+            - name: successful deployment 
+              if: success()
+              uses: deliverybot/deployment-status@master
+              with:
+                  state: success 
+                  token: ${{ github.token }}
+            - name: failed deployment 
+              if: failure()
+              uses: deliverybot/deployment-status@master
+              with:
+                  state: failure 
+                  token: ${{ github.token }}
+
+
